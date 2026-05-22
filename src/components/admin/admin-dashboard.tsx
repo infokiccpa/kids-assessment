@@ -21,6 +21,11 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   LayoutDashboard,
   FileText,
   Settings,
@@ -35,6 +40,7 @@ import {
   LogOut,
   Sparkles,
   Loader2,
+  X,
 } from "lucide-react";
 
 interface StudentRow {
@@ -65,6 +71,15 @@ const statusConfig: Record<
 
 type FilterType = "all" | "ready" | "needs-observation" | "pending-review";
 
+interface AdminNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
 export default function AdminDashboard() {
   const { user, setCurrentView, setSelectedStudentId, logout } = useAppStore();
   const [students, setStudents] = useState<StudentRow[]>([]);
@@ -73,6 +88,9 @@ export default function AdminDashboard() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifOpen, setNotifOpen] = useState(false);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -92,6 +110,42 @@ export default function AdminDashboard() {
     };
     fetchStudents();
   }, []);
+
+  // Fetch notifications
+  useEffect(() => {
+    if (!user?.id) return;
+    const fetchNotifs = async () => {
+      try {
+        const res = await fetch(`/api/notifications?userId=${user.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setNotifications(data.notifications || []);
+          setUnreadCount(data.unreadCount || 0);
+        }
+      } catch {
+        // Silently ignore
+      }
+    };
+    fetchNotifs();
+    const interval = setInterval(fetchNotifs, 30000);
+    return () => clearInterval(interval);
+  }, [user?.id]);
+
+  const markAsRead = async (notifId: string) => {
+    try {
+      await fetch("/api/notifications", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notificationId: notifId }),
+      });
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notifId ? { ...n, read: true } : n))
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch {
+      // Silently ignore
+    }
+  };
 
   const getRiskFlags = (riskFlagsStr: string): string[] => {
     try {
@@ -274,10 +328,75 @@ export default function AdminDashboard() {
           <div className="flex-1" />
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="sr-only">Notifications</span>
-            </Button>
+            <Popover open={notifOpen} onOpenChange={setNotifOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                  <span className="sr-only">Notifications</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-80 p-0">
+                <div className="flex items-center justify-between p-3 border-b">
+                  <h4 className="font-semibold text-sm">Notifications</h4>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={async () => {
+                        for (const n of notifications.filter((n) => !n.read)) {
+                          await markAsRead(n.id);
+                        }
+                      }}
+                      className="text-xs text-primary hover:text-primary/80 transition-colors"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                <div className="max-h-72 overflow-y-auto custom-scrollbar">
+                  {notifications.length === 0 ? (
+                    <div className="py-8 text-center text-sm text-muted-foreground">
+                      <Bell className="size-8 mx-auto mb-2 opacity-30" />
+                      <p>No notifications yet</p>
+                    </div>
+                  ) : (
+                    notifications.slice(0, 10).map((notif) => (
+                      <div
+                        key={notif.id}
+                        className={`flex items-start gap-3 p-3 border-b last:border-0 transition-colors hover:bg-muted/50 ${
+                          !notif.read ? "bg-primary/5" : ""
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className={`text-sm leading-tight ${!notif.read ? "font-medium" : ""}`}>
+                              {notif.title}
+                            </p>
+                            {!notif.read && (
+                              <button
+                                onClick={() => markAsRead(notif.id)}
+                                className="shrink-0 p-0.5 rounded hover:bg-muted transition-colors"
+                              >
+                                <X className="size-3 text-muted-foreground" />
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                            {notif.message}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground/70 mt-1">
+                            {new Date(notif.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
             <div className="hidden sm:flex items-center gap-2 text-sm">
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <span className="text-xs font-semibold text-primary">
@@ -356,6 +475,40 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Readiness Score Distribution */}
+          {students.some((s) => s.readinessScore !== null) && (
+            <Card className="mb-6">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Readiness Score Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4">
+                  {(() => {
+                    const scored = students.filter((s) => s.readinessScore !== null);
+                    const ready = scored.filter((s) => s.readinessScore! >= 80).length;
+                    const observation = scored.filter((s) => s.readinessScore! >= 60 && s.readinessScore! < 80).length;
+                    const support = scored.filter((s) => s.readinessScore! < 60).length;
+                    const total = scored.length || 1;
+                    return [
+                      { label: "Ready", count: ready, color: "bg-green-500", textColor: "text-green-700", bgColor: "bg-green-50", pct: Math.round((ready / total) * 100) },
+                      { label: "Needs Observation", count: observation, color: "bg-amber-500", textColor: "text-amber-700", bgColor: "bg-amber-50", pct: Math.round((observation / total) * 100) },
+                      { label: "Needs Support", count: support, color: "bg-red-500", textColor: "text-red-700", bgColor: "bg-red-50", pct: Math.round((support / total) * 100) },
+                    ].map((item) => (
+                      <div key={item.label} className={`rounded-lg ${item.bgColor} p-4 text-center`}>
+                        <div className={`text-3xl font-bold ${item.textColor}`}>{item.count}</div>
+                        <div className="text-xs font-medium text-muted-foreground mt-1">{item.label}</div>
+                        <div className="mt-2 h-1.5 bg-white/60 rounded-full overflow-hidden">
+                          <div className={`h-full ${item.color} rounded-full transition-all duration-500`} style={{ width: `${item.pct}%` }} />
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-1">{item.pct}%</div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Filter & Search Bar */}
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
