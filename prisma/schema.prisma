@@ -1,0 +1,217 @@
+// AI Kindergarten Readiness Assessment Platform - Database Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String   // bcrypt hashed
+  role      String   @default("PARENT") // PARENT | ADMIN
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  students      Student[]
+  notifications Notification[]
+  adminNotes    AdminNote[]
+}
+
+// ============================================
+// STUDENT APPLICATION
+// ============================================
+
+model Student {
+  id           String @id @default(cuid())
+  applicationId String @unique // KRA-XXXXX format
+  parentId     String
+
+  // Child Information
+  childName           String
+  dateOfBirth         String
+  gender              String // Male | Female | Other
+  nationality         String
+  languagesSpoken     String // Comma-separated
+  previousSchool      String @default("")
+  specialMedicalNotes String @default("")
+
+  // Parent Information
+  fatherName String
+  motherName String
+  mobileNumber String
+  parentEmail  String
+  address      String
+
+  // School Selection
+  schoolApplied String
+  gradeApplied  String
+
+  // Consent
+  consentGiven Boolean @default(false)
+
+  // Application Status
+  status String @default("DRAFT") // DRAFT | QUESTIONNAIRE | VIDEOS | SUBMITTED | UNDER_REVIEW | ACCEPTED | HOLD | REASSESS | REJECTED
+
+  // Current step in the parent flow
+  currentStep Int @default(1) // 1=Registration, 2=Questionnaire, 3=Video Tasks, 4=Review
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent        User          @relation(fields: [parentId], references: [id])
+  questionnaire Questionnaire?
+  videos        Video[]
+  aiAnalysis    AIAnalysis?
+  report        Report?
+  adminNotes    AdminNote[]
+}
+
+// ============================================
+// QUESTIONNAIRE
+// ============================================
+
+model Questionnaire {
+  id        String @id @default(cuid())
+  studentId String @unique
+
+  // Section A - Attention (JSON object with answers)
+  sectionA String @default("{}") // {q1: "yes", q2: "sometimes", q3: "no"}
+
+  // Section B - Emotional (JSON object with answers)
+  sectionB String @default("{}")
+
+  // Section C - Social (JSON object with answers)
+  sectionC String @default("{}")
+
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id])
+}
+
+// ============================================
+// VIDEO UPLOADS
+// ============================================
+
+model Video {
+  id        String @id @default(cuid())
+  studentId String
+  taskType  String // TASK1 | TASK2 | TASK3 | TASK4
+  filePath  String // Path to stored video
+  fileName  String
+  fileSize  Int    @default(0)
+  duration  Float  @default(0) // seconds
+  uploadedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, taskType])
+}
+
+// ============================================
+// AI ANALYSIS RESULTS
+// ============================================
+
+model AIAnalysis {
+  id        String @id @default(cuid())
+  studentId String @unique
+
+  // Video Analysis Metrics
+  sittingScore       Float @default(0)   // 1-10
+  attentionScore     Float @default(0)   // 1-10
+  hyperactivityScore Float @default(0)   // 1-10
+  emotionalScore     Float @default(0)   // 1-10
+  instructionScore   Float @default(0)   // 1-10
+
+  // Speech Analysis Metrics
+  speechClarity       Float @default(0)  // 1-10
+  vocabularyLevel     Float @default(0)  // 1-10
+  responseConfidence  Float @default(0)  // 1-10
+  responseDelay       Float @default(0)  // seconds
+
+  // Behavioral Scoring (AI-generated)
+  readinessScore        Float  @default(0)  // 0-100
+  attentionLevel        String @default("")  // Good | Moderate | Needs Support
+  instructionFollowing  String @default("")  // Good | Moderate | Needs Support
+  emotionalBehavior     String @default("")  // Description
+  socialReadiness       String @default("")  // Good | Moderate | Needs Support
+  classroomAdaptability String @default("")  // Description
+  teacherRecommendation String @default("")  // Detailed recommendation
+  riskFlags             String @default("[]") // JSON array of risk indicators
+
+  // Overall AI result as JSON for flexibility
+  overallResult String @default("{}")
+
+  // Processing status
+  analysisStatus String @default("PENDING") // PENDING | PROCESSING | COMPLETED | FAILED
+  videoAnalysisStatus  String @default("PENDING")
+  speechAnalysisStatus String @default("PENDING")
+  behavioralStatus     String @default("PENDING")
+
+  analyzedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id])
+}
+
+// ============================================
+// PDF REPORTS
+// ============================================
+
+model Report {
+  id        String @id @default(cuid())
+  studentId String @unique
+  filePath  String
+  generatedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id])
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  type   String // EMAIL_CONFIRM | UPLOAD_COMPLETE | ADMIN_REVIEW | STATUS_CHANGE
+  title  String
+  message String
+  read   Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// ============================================
+// ADMIN NOTES
+// ============================================
+
+model AdminNote {
+  id        String @id @default(cuid())
+  studentId String
+  adminId   String
+  note      String
+  action    String // ACCEPT | HOLD | REASSESS | REJECT
+  createdAt DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id])
+  admin   User    @relation(fields: [adminId], references: [id])
+}
