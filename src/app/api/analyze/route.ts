@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
       try {
         const zai = await ZAI.create();
         const videoObservations: string[] = [];
+        const MAX_VIDEO_SIZE_BYTES = 10 * 1024 * 1024; // 10MB limit for VLM
 
         // Analyze each uploaded video using VLM
         for (const video of student.videos) {
@@ -80,6 +81,13 @@ export async function POST(req: NextRequest) {
             
             if (fs.existsSync(videoPath)) {
               const videoBuffer = fs.readFileSync(videoPath);
+              
+              // Skip videos that are too large for VLM API
+              if (videoBuffer.length > MAX_VIDEO_SIZE_BYTES) {
+                console.log(`Skipping VLM for ${video.taskType}: video too large (${(videoBuffer.length / 1024 / 1024).toFixed(1)}MB)`);
+                continue;
+              }
+              
               const base64Video = videoBuffer.toString("base64");
               
               // Determine MIME type from file extension
@@ -139,7 +147,7 @@ Respond with ONLY the JSON object.`,
           } catch (videoErr) {
             console.error(
               `VLM analysis failed for video ${video.taskType}:`,
-              videoErr
+              videoErr instanceof Error ? videoErr.message : videoErr
             );
             // Continue with other videos
           }

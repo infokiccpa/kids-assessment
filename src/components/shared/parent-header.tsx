@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAppStore } from "@/store/app-store";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,43 +35,33 @@ export default function ParentHeader() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifOpen, setNotifOpen] = useState(false);
-  const userIdRef = useRef<string | null>(null);
 
-  const loadNotifications = useCallback(async (uid: string) => {
-    try {
-      const res = await fetch(`/api/notifications?userId=${uid}`);
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data.notifications || []);
-        setUnreadCount(data.unreadCount || 0);
-      }
-    } catch {
-      // Silently ignore
-    }
-  }, []);
-
+  // Fetch notifications on mount and every 30 seconds
   useEffect(() => {
     if (!user?.id) return;
-    userIdRef.current = user.id;
-    // Initial load via event dispatch
-    const evt = new CustomEvent("fetch-notifications");
-    window.dispatchEvent(evt);
-    const interval = setInterval(() => {
-      window.dispatchEvent(new CustomEvent("fetch-notifications"));
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [user?.id]);
 
-  // Listen for notification fetch events
-  useEffect(() => {
-    const handler = () => {
-      if (userIdRef.current) {
-        loadNotifications(userIdRef.current);
+    let active = true;
+
+    const fetchNotifs = async () => {
+      try {
+        const res = await fetch(`/api/notifications?userId=${user.id}`);
+        if (res.ok && active) {
+          const data = await res.json();
+          setNotifications(data.notifications || []);
+          setUnreadCount(data.unreadCount || 0);
+        }
+      } catch {
+        // Silently ignore
       }
     };
-    window.addEventListener("fetch-notifications", handler);
-    return () => window.removeEventListener("fetch-notifications", handler);
-  }, [loadNotifications]);
+
+    fetchNotifs();
+    const interval = setInterval(fetchNotifs, 30000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [user?.id]);
 
   const markAsRead = useCallback(async (notifId: string) => {
     try {
