@@ -17,6 +17,7 @@ import {
   LogOut,
   Bell,
   X,
+  LayoutGrid,
 } from "lucide-react";
 import {
   Popover,
@@ -44,6 +45,11 @@ const SIDEBAR_ITEMS = [
     icon: FileText,
     label: "Applications",
     view: "admin-students" as const,
+  },
+  {
+    icon: LayoutGrid,
+    label: "Our Platforms",
+    view: "admin-platforms" as const,
   },
   {
     icon: Settings,
@@ -159,7 +165,7 @@ export default function AdminLayout({
   }, []);
 
   const handleNavigate = useCallback((view: string) => {
-    setCurrentView(view as "admin-dashboard" | "admin-students" | "admin-settings");
+    setCurrentView(view as "admin-dashboard" | "admin-students" | "admin-settings" | "admin-platforms");
     setSidebarOpen(false);
   }, [setCurrentView]);
 

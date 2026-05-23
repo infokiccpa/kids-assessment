@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useAppStore } from "@/store/app-store";
 import LandingPage from "@/components/shared/landing";
 import LoginForm from "@/components/auth/login-form";
@@ -9,6 +10,7 @@ import ParentHeader from "@/components/shared/parent-header";
 import AdminDashboard from "@/components/admin/admin-dashboard";
 import AdminApplications from "@/components/admin/admin-applications";
 import AdminSettings from "@/components/admin/admin-settings";
+import AdminPlatforms from "@/components/admin/admin-platforms";
 import StudentDetail from "@/components/admin/student-detail";
 import ParentDashboard from "@/components/parent/parent-dashboard";
 import RegistrationForm from "@/components/parent/registration-form";
@@ -18,7 +20,7 @@ import Review from "@/components/parent/review";
 import Results from "@/components/parent/results";
 import AdminLayout from "@/components/admin/admin-layout";
 import Image from "next/image";
-import { Heart } from "lucide-react";
+import { Heart, Loader2 } from "lucide-react";
 
 // Views that should use the parent layout (header + footer)
 const PARENT_VIEWS = [
@@ -40,10 +42,67 @@ const STANDALONE_VIEWS = [
   "admin-students",
   "admin-student-detail",
   "admin-settings",
+  "admin-platforms",
 ];
 
 export default function Home() {
-  const { currentView, isAuthenticated, user } = useAppStore();
+  const { currentView, isAuthenticated, user, setUser, setCurrentView } = useAppStore();
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  // Restore session on mount
+  useEffect(() => {
+    const restoreSession = async () => {
+      try {
+        const sessionRes = await fetch("/api/auth/session");
+        const session = await sessionRes.json();
+        if (session?.user) {
+          setUser({
+            id: session.user.id as string,
+            email: session.user.email as string,
+            name: session.user.name as string,
+            role: (session.user.role as string) || "PARENT",
+          });
+          
+          // Restore exact last view or fallback to dashboard based on role
+          const lastView = localStorage.getItem("kinder_assess_last_view");
+          const allowedViews = session.user.role === "ADMIN"
+            ? ["admin-dashboard", "admin-students", "admin-student-detail", "admin-settings", "admin-platforms"]
+            : ["parent-dashboard", "parent-registration", "parent-questionnaire", "parent-videos", "parent-review", "parent-results"];
+            
+          if (lastView && allowedViews.includes(lastView)) {
+            setCurrentView(lastView as any);
+          } else {
+            setCurrentView(session.user.role === "ADMIN" ? "admin-dashboard" : "parent-dashboard");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to restore session", err);
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+    restoreSession();
+  }, [setUser, setCurrentView]);
+
+  // Persist currentView to localStorage whenever it changes
+  useEffect(() => {
+    if (isAuthenticated && currentView) {
+      localStorage.setItem("kinder_assess_last_view", currentView);
+    }
+  }, [currentView, isAuthenticated]);
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-playful-warm">
+        <div className="flex flex-col items-center gap-3 animate-bounce-in">
+          <div className="icon-bubble icon-bubble-coral h-20 w-20 animate-sparkle">
+            <Loader2 className="h-10 w-10 animate-spin text-white" />
+          </div>
+          <p className="text-muted-foreground font-semibold mt-2 text-lg rainbow-text">Restoring session...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Auth views (no auth required, standalone)
   if (currentView === "landing") return <LandingPage />;
@@ -70,6 +129,13 @@ export default function Home() {
     return (
       <AdminLayout activeView="admin-settings">
         <AdminSettings />
+      </AdminLayout>
+    );
+  }
+  if (currentView === "admin-platforms") {
+    return (
+      <AdminLayout activeView="admin-platforms">
+        <AdminPlatforms />
       </AdminLayout>
     );
   }

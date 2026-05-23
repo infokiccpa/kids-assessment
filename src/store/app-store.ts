@@ -15,7 +15,8 @@ export type AppView =
   | "admin-dashboard"
   | "admin-students"
   | "admin-student-detail"
-  | "admin-settings";
+  | "admin-settings"
+  | "admin-platforms";
 
 interface AppState {
   // Navigation
@@ -91,7 +92,10 @@ export const useAppStore = create<AppState>((set) => ({
       ],
     })),
 
-  logout: () =>
+  logout: () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("kinder_assess_last_view");
+    }
     set({
       user: null,
       isAuthenticated: false,
@@ -99,5 +103,6 @@ export const useAppStore = create<AppState>((set) => ({
       selectedStudentId: null,
       currentStudentId: null,
       registrationStep: 1,
-    }),
+    });
+  },
 }));
