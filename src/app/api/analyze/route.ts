@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import ZAI from "z-ai-web-dev-sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 import path from "path";
+
+// Initialize Gemini client
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req: NextRequest) {
   try {
@@ -59,7 +62,7 @@ export async function POST(req: NextRequest) {
         : {};
 
       // ============================================
-      // STEP 1: Video Analysis using VLM
+      // STEP 1: Video Analysis using Gemini VLM
       // ============================================
       let videoAnalysisResult = {
         sittingScore: calculateSittingScore(sectionA),
@@ -70,46 +73,41 @@ export async function POST(req: NextRequest) {
       };
 
       try {
-        const zai = await ZAI.create();
+        const vlmModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
         const videoObservations: string[] = [];
-        const MAX_VIDEO_SIZE_BYTES = 10 * 1024 * 1024; // 10MB limit for VLM
+        const MAX_VIDEO_SIZE_BYTES = 10 * 1024 * 1024; // 10MB limit
 
-        // Analyze each uploaded video using VLM
+        // Analyze each uploaded video using Gemini Vision
         for (const video of student.videos) {
           try {
             const videoPath = path.join(process.cwd(), "public", video.filePath);
-            
+
             if (fs.existsSync(videoPath)) {
               const videoBuffer = fs.readFileSync(videoPath);
-              
-              // Skip videos that are too large for VLM API
+
+              // Skip videos that are too large
               if (videoBuffer.length > MAX_VIDEO_SIZE_BYTES) {
                 console.log(`Skipping VLM for ${video.taskType}: video too large (${(videoBuffer.length / 1024 / 1024).toFixed(1)}MB)`);
                 continue;
               }
-              
+
               const base64Video = videoBuffer.toString("base64");
-              
-              // Determine MIME type from file extension
               const ext = video.filePath.split(".").pop()?.toLowerCase() || "webm";
               const mimeType = getVideoMimeType(ext);
-              
               const taskDescription = getTaskDescription(video.taskType);
-              
-              const vlmResponse = await zai.chat.completions.createVision({
-                messages: [
-                  {
-                    role: "system",
-                    content:
-                      "You are an expert early childhood education observer. Analyze the video of a kindergarten-age child performing a task. Provide observations about their behavior, attention, emotional state, and physical abilities. Use educational readiness language only - never medical terminology. Be specific and objective.",
+
+              const vlmResult = await vlmModel.generateContent([
+                {
+                  inlineData: {
+                    data: base64Video,
+                    mimeType: mimeType,
                   },
-                  {
-                    role: "user",
-                    content: [
-                      {
-                        type: "text",
-                        text: `Observe this video of a child performing: "${taskDescription}". 
-                        
+                },
+                {
+                  text: `You are an expert early childhood education observer. Analyze the video of a kindergarten-age child performing a task. Provide observations about their behavior, attention, emotional state, and physical abilities. Use educational readiness language only - never medical terminology. Be specific and objective.
+
+Observe this video of a child performing: "${taskDescription}". 
+
 Provide your analysis as a JSON object with these fields:
 {
   "observed_behaviors": ["list of observed behaviors"],
@@ -122,24 +120,11 @@ Provide your analysis as a JSON object with these fields:
   "summary": "<brief observation summary>"
 }
 
-Respond with ONLY the JSON object.`,
-                      },
-                      {
-                        type: "video_url",
-                        video_url: {
-                          url: `data:${mimeType};base64,${base64Video}`,
-                        },
-                      },
-                    ],
-                  },
-                ],
-                thinking: { type: "disabled" },
-              });
+Respond with ONLY the JSON object, no other text.`,
+                },
+              ]);
 
-              const vlmText =
-                vlmResponse?.choices?.[0]?.message?.content ||
-                vlmResponse?.content ||
-                "";
+              const vlmText = vlmResult.response.text();
               videoObservations.push(
                 `[${video.taskType}]: ${vlmText}`
               );
@@ -156,16 +141,12 @@ Respond with ONLY the JSON object.`,
         // If we got VLM observations, use them to refine scores
         if (videoObservations.length > 0) {
           try {
-            const scoreRefinement = await zai.chat.completions.create({
-              messages: [
-                {
-                  role: "system",
-                  content:
-                    "You are an early childhood education assessment specialist. Based on video observations and questionnaire responses, calculate readiness scores. Always respond with valid JSON only.",
-                },
-                {
-                  role: "user",
-                  content: `Based on the following video observations and questionnaire data for a kindergarten readiness assessment, provide refined scores.
+            const llmModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+            const scoreRefinement = await llmModel.generateContent(
+              `You are an early childhood education assessment specialist. Based on video observations and questionnaire responses, calculate readiness scores. Always respond with valid JSON only.
+
+Based on the following video observations and questionnaire data for a kindergarten readiness assessment, provide refined scores.
 
 Questionnaire Responses:
 - Attention Section: ${JSON.stringify(sectionA)}
@@ -191,16 +172,10 @@ Provide refined scores as JSON:
   "instruction_score": <1-10>
 }
 
-Respond with ONLY the JSON object.`,
-                },
-              ],
-              stream: false,
-            });
+Respond with ONLY the JSON object.`
+            );
 
-            const scoreText =
-              scoreRefinement?.choices?.[0]?.message?.content ||
-              scoreRefinement?.content ||
-              "";
+            const scoreText = scoreRefinement.response.text();
             const scoreMatch = scoreText.match(/\{[\s\S]*\}/);
             if (scoreMatch) {
               const refined = JSON.parse(scoreMatch[0]);
@@ -219,7 +194,7 @@ Respond with ONLY the JSON object.`,
       }
 
       // ============================================
-      // STEP 2: Speech Analysis using ASR
+      // STEP 2: Speech Analysis using Gemini
       // ============================================
       let speechResult = {
         speechClarity: calculateSpeechScore(sectionC),
@@ -234,7 +209,6 @@ Respond with ONLY the JSON object.`,
 
       if (speechVideo) {
         try {
-          const zai = await ZAI.create();
           const videoPath = path.join(
             process.cwd(),
             "public",
@@ -244,20 +218,37 @@ Respond with ONLY the JSON object.`,
           if (fs.existsSync(videoPath)) {
             const audioBuffer = fs.readFileSync(videoPath);
             const base64Audio = audioBuffer.toString("base64");
+            const ext = speechVideo.filePath.split(".").pop()?.toLowerCase() || "webm";
+            const mimeType = getVideoMimeType(ext);
 
-            const asrResponse = await zai.audio.asr.create({
-              file_base64: base64Audio,
-            });
+            // Use Gemini to transcribe the audio/video
+            const asrModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-            const transcription =
-              asrResponse?.text || "";
+            const asrResult = await asrModel.generateContent([
+              {
+                inlineData: {
+                  data: base64Audio,
+                  mimeType: mimeType,
+                },
+              },
+              {
+                text: `Transcribe all speech from this audio/video of a kindergarten-age child. Only output the exact words spoken. If there is no speech, respond with "NO_SPEECH_DETECTED". Do not add any commentary or analysis.`,
+              },
+            ]);
 
-            if (transcription && transcription.trim().length > 0) {
+            const transcription = asrResult.response.text().trim();
+
+            if (transcription && transcription !== "NO_SPEECH_DETECTED" && transcription.length > 0) {
               speechResult.transcription = transcription;
 
               // Analyze the transcription for speech quality
               try {
-                const speechAnalysisPrompt = `You are a speech-language pathologist specializing in early childhood. Analyze this transcription of a kindergarten-age child's self-introduction.
+                const speechModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+                const speechAnalysisResponse = await speechModel.generateContent(
+                  `You are an expert early childhood speech and language observer. Always respond with valid JSON only. Never include medical diagnoses.
+
+Analyze this transcription of a kindergarten-age child's self-introduction.
 
 IMPORTANT: This is an educational observation, NOT a medical diagnosis. Use safe educational wording only.
 
@@ -273,26 +264,10 @@ Analyze and provide scores as JSON:
   "observations": "<brief observations about speech patterns>"
 }
 
-Respond with ONLY the JSON object.`;
-
-                const speechAnalysisResponse = await zai.chat.completions.create(
-                  {
-                    messages: [
-                      {
-                        role: "system",
-                        content:
-                          "You are an expert early childhood speech and language observer. Always respond with valid JSON only. Never include medical diagnoses.",
-                      },
-                      { role: "user", content: speechAnalysisPrompt },
-                    ],
-                    stream: false,
-                  }
+Respond with ONLY the JSON object.`
                 );
 
-                const speechText =
-                  speechAnalysisResponse?.choices?.[0]?.message?.content ||
-                  speechAnalysisResponse?.content ||
-                  "";
+                const speechText = speechAnalysisResponse.response.text();
                 const speechMatch = speechText.match(/\{[\s\S]*\}/);
                 if (speechMatch) {
                   const parsed = JSON.parse(speechMatch[0]);
@@ -330,12 +305,12 @@ Respond with ONLY the JSON object.`;
       }
 
       // ============================================
-      // STEP 3: Behavioral Scoring using LLM
+      // STEP 3: Behavioral Scoring using Gemini LLM
       // ============================================
       let behavioralResult: BehavioralResult;
 
       try {
-        const zai = await ZAI.create();
+        const behavioralModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const speechContext = speechResult.transcription
           ? `\nSpeech Transcription (from Self Introduction task): "${speechResult.transcription}"`
@@ -386,23 +361,8 @@ Remember:
 
 Respond with ONLY the JSON object.`;
 
-        const llmResponse = await zai.chat.completions.create({
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are an expert early childhood education assessor. Always respond with valid JSON only. Never include medical diagnoses - use educational readiness language only. Be constructive and supportive in recommendations.",
-            },
-            { role: "user", content: behavioralPrompt },
-          ],
-          stream: false,
-        });
-
-        // Extract the text content from the LLM response
-        const responseText =
-          llmResponse?.choices?.[0]?.message?.content ||
-          llmResponse?.content ||
-          (typeof llmResponse === "string" ? llmResponse : "");
+        const llmResult = await behavioralModel.generateContent(behavioralPrompt);
+        const responseText = llmResult.response.text();
 
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
@@ -447,7 +407,7 @@ Respond with ONLY the JSON object.`;
           riskFlags: JSON.stringify(behavioralResult.risk_flags || []),
           overallResult: JSON.stringify({
             ...behavioralResult,
-            video_observations: "AI video analysis completed",
+            video_observations: "AI video analysis completed via Gemini",
             speech_transcription: speechResult.transcription || "Not available",
           }),
           analysisStatus: "COMPLETED",
