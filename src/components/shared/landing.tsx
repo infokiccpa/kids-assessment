@@ -3,6 +3,7 @@
 import { useAppStore } from "@/store/app-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
 import {
   Brain,
   Video,
@@ -91,9 +92,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 w-full border-b-2 border-[#FF6B6B]/10 bg-white/80 backdrop-blur-md">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2.5 animate-wiggle">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF6B6B] to-[#FF8E53] text-white shadow-md">
-              <Sparkles className="h-5 w-5" />
-            </div>
+            <Image src="/kam-logo.png" alt="Kam Global AI" width={40} height={40} className="rounded-xl shadow-md" />
             <span className="text-xl font-extrabold tracking-tight text-foreground">
               Kinder<span className="text-[#FF6B6B]">Assess</span>
             </span>
@@ -293,9 +292,7 @@ export default function LandingPage() {
         <div className="bg-white/80 backdrop-blur-sm">
           <div className="container mx-auto flex flex-col items-center gap-3 px-4 py-8 sm:flex-row sm:justify-center sm:px-6 lg:px-8">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF6B6B] to-[#FF8E53] text-white">
-                <Sparkles className="h-3.5 w-3.5" />
-              </div>
+              <Image src="/kam-logo.png" alt="Kam Global AI" width={24} height={24} className="rounded-lg" />
               <span className="font-semibold">Powered by Kam Global AI</span>
             </div>
             <span className="hidden sm:inline text-muted-foreground/30 text-lg">

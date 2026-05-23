@@ -8,11 +8,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import Image from "next/image";
 import {
   LayoutDashboard,
   Bell,
   LogOut,
-  Sparkles,
   ChevronRight,
   CheckCircle2,
   Clock,
@@ -124,9 +124,7 @@ export default function ParentHeader() {
             onClick={() => setCurrentView("parent-dashboard")}
             className="flex items-center gap-2.5 hover:opacity-90 transition-all group"
           >
-            <div className="icon-bubble icon-bubble-coral size-10 rounded-xl animate-wiggle">
-              <Sparkles className="h-5 w-5" />
-            </div>
+            <Image src="/kam-logo.png" alt="Kam Global AI" width={40} height={40} className="rounded-xl animate-wiggle" />
             <span className="font-extrabold text-lg hidden sm:inline rainbow-text">
               KinderAssess
             </span>

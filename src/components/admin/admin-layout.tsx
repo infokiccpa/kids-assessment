@@ -8,13 +8,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import Image from "next/image";
 import {
   LayoutDashboard,
   FileText,
   Settings,
   Menu,
   LogOut,
-  Sparkles,
   Bell,
   X,
 } from "lucide-react";
@@ -66,9 +66,7 @@ function SidebarContent({
     <div className="flex flex-col h-full bg-gradient-to-b from-purple-50 via-lavender-50 to-pink-50">
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-purple-100/60">
-        <div className="icon-bubble icon-bubble-coral h-10 w-10 animate-wiggle">
-          <Sparkles className="h-5 w-5" />
-        </div>
+        <Image src="/kam-logo.png" alt="Kam Global AI" width={40} height={40} className="rounded-xl animate-wiggle" />
         <span className="font-extrabold text-lg rainbow-text">KinderAssess</span>
       </div>
       {/* Nav */}

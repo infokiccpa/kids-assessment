@@ -13,6 +13,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import Image from "next/image";
 import { Loader2, LogIn, AlertCircle, Info } from "lucide-react";
 import { signIn } from "next-auth/react";
 
@@ -89,9 +90,7 @@ export default function LoginForm() {
       <div className="w-full max-w-md animate-bounce-in">
         {/* Logo / Brand */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 icon-bubble icon-bubble-coral h-16 w-16 rounded-2xl animate-wiggle">
-            <LogIn className="h-8 w-8" />
-          </div>
+          <Image src="/kam-logo.png" alt="Kam Global AI" width={64} height={64} className="mx-auto mb-4 rounded-2xl animate-wiggle" />
           <h1 className="text-3xl font-extrabold tracking-tight rainbow-text">
             Welcome Back
           </h1>

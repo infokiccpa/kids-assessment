@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import Image from "next/image";
 import {
   Loader2,
   UserPlus,
@@ -115,9 +116,7 @@ export default function RegisterForm() {
       <div className="w-full max-w-md animate-bounce-in">
         {/* Logo / Brand */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 icon-bubble icon-bubble-green h-16 w-16 rounded-2xl animate-wiggle">
-            <UserPlus className="h-8 w-8" />
-          </div>
+          <Image src="/kam-logo.png" alt="Kam Global AI" width={64} height={64} className="mx-auto mb-4 rounded-2xl animate-wiggle" />
           <h1 className="text-3xl font-extrabold tracking-tight rainbow-text">
             Create Account
           </h1>

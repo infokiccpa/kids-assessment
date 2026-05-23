@@ -17,7 +17,8 @@ import VideoTasks from "@/components/parent/video-tasks";
 import Review from "@/components/parent/review";
 import Results from "@/components/parent/results";
 import AdminLayout from "@/components/admin/admin-layout";
-import { Sparkles, Heart } from "lucide-react";
+import Image from "next/image";
+import { Heart } from "lucide-react";
 
 // Views that should use the parent layout (header + footer)
 const PARENT_VIEWS = [
@@ -106,7 +107,7 @@ export default function Home() {
         <div className="divider-rainbow" />
         <div className="container mx-auto flex flex-col items-center gap-2 px-4 py-4 sm:flex-row sm:justify-center sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-[#FF6B6B] animate-sparkle" />
+            <Image src="/kam-logo.png" alt="Kam Global AI" width={20} height={20} className="animate-sparkle" />
             <span>Powered by Kam Global AI</span>
           </div>
           <span className="hidden sm:inline text-muted-foreground/50">
