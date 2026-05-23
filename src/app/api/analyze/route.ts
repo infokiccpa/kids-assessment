@@ -9,7 +9,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 // Gemini model configs
 const FLASH_MODEL = "gemini-2.0-flash";
-const PRO_MODEL = "gemini-2.0-flash"; // Using flash for speed; change to "gemini-2.5-pro" for highest quality
+const PRO_MODEL = "gemini-2.5-pro"; // Most powerful model for best accuracy
 
 // ============================================
 // Retry helper with exponential backoff
