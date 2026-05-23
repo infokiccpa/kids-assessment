@@ -228,39 +228,50 @@ export default function AdminDashboard() {
   ];
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-4 py-4 border-b">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <Sparkles className="h-4 w-4" />
+    <div className="flex flex-col h-full bg-gradient-to-b from-purple-50 via-lavender-50 to-pink-50">
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-purple-100/60">
+        <div className="icon-bubble icon-bubble-coral h-10 w-10 animate-wiggle">
+          <Sparkles className="h-5 w-5" />
         </div>
-        <span className="font-bold text-sm">KinderAssess</span>
+        <span className="font-extrabold text-lg rainbow-text">KinderAssess</span>
       </div>
-      <nav className="flex-1 px-2 py-4 space-y-1">
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-4 space-y-2">
         {sidebarItems.map((item) => (
           <Button
             key={item.label}
-            variant={item.active ? "secondary" : "ghost"}
-            className="w-full justify-start gap-3 h-10"
+            variant="ghost"
+            className={`w-full justify-start gap-3 h-11 rounded-2xl px-4 transition-all duration-200 ${
+              item.active
+                ? "bg-gradient-to-r from-[#FF6B6B] to-[#FF8E53] text-white shadow-lg shadow-[#FF6B6B]/25 hover:from-[#FF6B6B] hover:to-[#FF8E53] font-bold"
+                : "text-purple-700/70 hover:bg-purple-100/60 hover:text-purple-900 font-medium"
+            }`}
             onClick={() => {
               setCurrentView(item.view);
               setSidebarOpen(false);
             }}
           >
-            <item.icon className="h-4 w-4" />
+            <item.icon className={`h-5 w-5 ${item.active ? "text-white" : ""}`} />
             {item.label}
           </Button>
         ))}
       </nav>
-      <div className="px-2 py-4 border-t">
+      {/* Divider */}
+      <div className="px-4 pb-2">
+        <div className="divider-rainbow" />
+      </div>
+      {/* Sign Out */}
+      <div className="px-3 py-3">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 h-10 text-muted-foreground hover:text-foreground"
+          className="w-full justify-start gap-3 h-11 rounded-2xl px-4 text-rose-400 hover:bg-rose-50 hover:text-rose-600 font-medium transition-all duration-200"
           onClick={() => {
             logout();
             setCurrentView("landing");
           }}
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-5 w-5" />
           Sign Out
         </Button>
       </div>
@@ -269,21 +280,28 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="size-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center min-h-screen bg-playful-warm">
+        <div className="flex flex-col items-center gap-3">
+          <div className="icon-bubble icon-bubble-coral h-16 w-16 animate-sparkle">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+          <p className="text-muted-foreground font-medium">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="max-w-md w-full">
+      <div className="flex items-center justify-center min-h-screen bg-playful-warm">
+        <Card className="max-w-md w-full card-3d">
           <CardContent className="p-6 text-center">
+            <div className="icon-bubble icon-bubble-coral h-14 w-14 mx-auto mb-4">
+              <AlertTriangle className="h-7 w-7" />
+            </div>
             <p className="text-destructive font-medium">{error}</p>
             <Button
-              variant="outline"
-              className="mt-4"
+              className="mt-4 btn-3d bg-[#FF6B6B] hover:bg-[#ff5252] text-white"
               onClick={() => window.location.reload()}
             >
               Retry
@@ -295,15 +313,15 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-playful-warm">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:w-60 lg:flex-col lg:border-r bg-card">
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r border-purple-100/50">
         <SidebarContent />
       </aside>
 
       {/* Mobile Sidebar (Sheet) */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="w-60 p-0">
+        <SheetContent side="left" className="w-64 p-0">
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation</SheetTitle>
           </SheetHeader>
@@ -314,35 +332,36 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 sm:px-6">
+        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-purple-100/40 bg-white/80 backdrop-blur-md px-4 sm:px-6">
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="lg:hidden rounded-2xl hover:bg-purple-50"
             onClick={() => setSidebarOpen(true)}
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5 text-purple-600" />
             <span className="sr-only">Toggle sidebar</span>
           </Button>
 
           <div className="flex-1" />
 
           <div className="flex items-center gap-3">
+            {/* Notification Popover */}
             <Popover open={notifOpen} onOpenChange={setNotifOpen}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="relative rounded-2xl hover:bg-amber-50">
+                  <Bell className="h-5 w-5 text-amber-500" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
+                    <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#FF6B6B] text-[10px] font-bold text-white shadow-md shadow-[#FF6B6B]/30">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
                   <span className="sr-only">Notifications</span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-80 p-0">
-                <div className="flex items-center justify-between p-3 border-b">
-                  <h4 className="font-semibold text-sm">Notifications</h4>
+              <PopoverContent align="end" className="w-80 p-0 rounded-2xl border-2 border-purple-100 shadow-xl">
+                <div className="flex items-center justify-between p-4 border-b border-purple-100/50">
+                  <h4 className="font-bold text-sm text-purple-800">🔔 Notifications</h4>
                   {unreadCount > 0 && (
                     <button
                       onClick={async () => {
@@ -350,7 +369,7 @@ export default function AdminDashboard() {
                           await markAsRead(n.id);
                         }
                       }}
-                      className="text-xs text-primary hover:text-primary/80 transition-colors"
+                      className="text-xs text-[#FF6B6B] hover:text-[#ff5252] font-semibold transition-colors"
                     >
                       Mark all read
                     </button>
@@ -358,29 +377,31 @@ export default function AdminDashboard() {
                 </div>
                 <div className="max-h-72 overflow-y-auto custom-scrollbar">
                   {notifications.length === 0 ? (
-                    <div className="py-8 text-center text-sm text-muted-foreground">
-                      <Bell className="size-8 mx-auto mb-2 opacity-30" />
-                      <p>No notifications yet</p>
+                    <div className="py-8 text-center text-muted-foreground">
+                      <div className="icon-bubble icon-bubble-purple h-12 w-12 mx-auto mb-3 opacity-50">
+                        <Bell className="h-6 w-6" />
+                      </div>
+                      <p className="font-medium text-sm">No notifications yet</p>
                     </div>
                   ) : (
                     notifications.slice(0, 10).map((notif) => (
                       <div
                         key={notif.id}
-                        className={`flex items-start gap-3 p-3 border-b last:border-0 transition-colors hover:bg-muted/50 ${
-                          !notif.read ? "bg-primary/5" : ""
+                        className={`flex items-start gap-3 p-3 border-b border-purple-50 last:border-0 transition-colors hover:bg-purple-50/40 ${
+                          !notif.read ? "bg-[#FF6B6B]/5" : ""
                         }`}
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <p className={`text-sm leading-tight ${!notif.read ? "font-medium" : ""}`}>
+                            <p className={`text-sm leading-tight ${!notif.read ? "font-semibold" : ""}`}>
                               {notif.title}
                             </p>
                             {!notif.read && (
                               <button
                                 onClick={() => markAsRead(notif.id)}
-                                className="shrink-0 p-0.5 rounded hover:bg-muted transition-colors"
+                                className="shrink-0 p-1 rounded-lg hover:bg-purple-100 transition-colors"
                               >
-                                <X className="size-3 text-muted-foreground" />
+                                <X className="size-3 text-purple-400" />
                               </button>
                             )}
                           </div>
@@ -397,13 +418,12 @@ export default function AdminDashboard() {
                 </div>
               </PopoverContent>
             </Popover>
+            {/* User Avatar */}
             <div className="hidden sm:flex items-center gap-2 text-sm">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-xs font-semibold text-primary">
-                  {user?.name?.charAt(0)?.toUpperCase() || "A"}
-                </span>
+              <div className="icon-bubble icon-bubble-purple h-9 w-9 text-xs font-bold">
+                {user?.name?.charAt(0)?.toUpperCase() || "A"}
               </div>
-              <span className="font-medium text-foreground">
+              <span className="font-semibold text-foreground">
                 {user?.name || "Admin"}
               </span>
             </div>
@@ -411,65 +431,74 @@ export default function AdminDashboard() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
           {/* Page Header */}
           <div className="mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Admin Dashboard
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground">
+              🎨 Admin Dashboard
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-sm">
               Review and manage kindergarten readiness applications
             </p>
+            <div className="divider-rainbow mt-3 max-w-xs" />
           </div>
 
           {/* Stat Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Card>
+            <Card className="card-3d bg-playful-card-coral">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-sm font-semibold text-muted-foreground">
                   Total Applications
                 </CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <div className="icon-bubble icon-bubble-coral h-9 w-9">
+                  <Users className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{totalApplications}</div>
+                <div className="text-3xl font-extrabold text-[#FF6B6B]">{totalApplications}</div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="card-3d bg-playful-card-purple">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-sm font-semibold text-muted-foreground">
                   Under Review
                 </CardTitle>
-                <Clock className="h-4 w-4 text-purple-500" />
+                <div className="icon-bubble icon-bubble-purple h-9 w-9">
+                  <Clock className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-purple-600">
+                <div className="text-3xl font-extrabold text-purple-600">
                   {underReview}
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="card-3d bg-playful-card-green">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-sm font-semibold text-muted-foreground">
                   Accepted
                 </CardTitle>
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <div className="icon-bubble icon-bubble-green h-9 w-9">
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-3xl font-extrabold text-green-600">
                   {accepted}
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="card-3d bg-playful-card-yellow">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-sm font-semibold text-muted-foreground">
                   Needs Attention
                 </CardTitle>
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <div className="icon-bubble icon-bubble-yellow h-9 w-9">
+                  <AlertTriangle className="h-4 w-4" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-amber-600">
+                <div className="text-3xl font-extrabold text-amber-600">
                   {needsAttention}
                 </div>
               </CardContent>
@@ -478,9 +507,11 @@ export default function AdminDashboard() {
 
           {/* Readiness Score Distribution */}
           {students.some((s) => s.readinessScore !== null) && (
-            <Card className="mb-6">
+            <Card className="mb-6 card-3d">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Readiness Score Distribution</CardTitle>
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  📊 Readiness Score Distribution
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-4">
@@ -491,17 +522,17 @@ export default function AdminDashboard() {
                     const support = scored.filter((s) => s.readinessScore! < 60).length;
                     const total = scored.length || 1;
                     return [
-                      { label: "Ready", count: ready, color: "bg-green-500", textColor: "text-green-700", bgColor: "bg-green-50", pct: Math.round((ready / total) * 100) },
-                      { label: "Needs Observation", count: observation, color: "bg-amber-500", textColor: "text-amber-700", bgColor: "bg-amber-50", pct: Math.round((observation / total) * 100) },
-                      { label: "Needs Support", count: support, color: "bg-red-500", textColor: "text-red-700", bgColor: "bg-red-50", pct: Math.round((support / total) * 100) },
+                      { label: "Ready", count: ready, color: "bg-green-500", textColor: "text-green-700", bgColor: "bg-gradient-to-br from-green-50 to-emerald-100", pct: Math.round((ready / total) * 100) },
+                      { label: "Needs Observation", count: observation, color: "bg-amber-500", textColor: "text-amber-700", bgColor: "bg-gradient-to-br from-amber-50 to-yellow-100", pct: Math.round((observation / total) * 100) },
+                      { label: "Needs Support", count: support, color: "bg-red-500", textColor: "text-red-700", bgColor: "bg-gradient-to-br from-red-50 to-rose-100", pct: Math.round((support / total) * 100) },
                     ].map((item) => (
-                      <div key={item.label} className={`rounded-lg ${item.bgColor} p-4 text-center`}>
-                        <div className={`text-3xl font-bold ${item.textColor}`}>{item.count}</div>
-                        <div className="text-xs font-medium text-muted-foreground mt-1">{item.label}</div>
-                        <div className="mt-2 h-1.5 bg-white/60 rounded-full overflow-hidden">
-                          <div className={`h-full ${item.color} rounded-full transition-all duration-500`} style={{ width: `${item.pct}%` }} />
+                      <div key={item.label} className={`rounded-2xl ${item.bgColor} p-4 text-center shadow-sm`}>
+                        <div className={`text-3xl font-extrabold ${item.textColor}`}>{item.count}</div>
+                        <div className="text-xs font-semibold text-muted-foreground mt-1">{item.label}</div>
+                        <div className="mt-2 h-2 bg-white/60 rounded-full overflow-hidden shadow-inner">
+                          <div className={`h-full ${item.color} rounded-full transition-all duration-500 shadow-sm`} style={{ width: `${item.pct}%` }} />
                         </div>
-                        <div className="text-[10px] text-muted-foreground mt-1">{item.pct}%</div>
+                        <div className="text-[10px] text-muted-foreground mt-1 font-semibold">{item.pct}%</div>
                       </div>
                     ));
                   })()}
@@ -513,66 +544,76 @@ export default function AdminDashboard() {
           {/* Filter & Search Bar */}
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <div className="flex gap-2 flex-wrap">
-              <Button
-                variant={activeFilter === "all" ? "default" : "outline"}
-                size="sm"
+              <button
+                className={`px-4 py-2 rounded-2xl text-sm font-bold transition-all duration-200 ${
+                  activeFilter === "all"
+                    ? "btn-3d bg-[#FF6B6B] text-white"
+                    : "bg-white border-2 border-purple-100 text-purple-600 hover:border-[#FF6B6B]/40 hover:text-[#FF6B6B] shadow-sm"
+                }`}
                 onClick={() => setActiveFilter("all")}
               >
-                All
-              </Button>
-              <Button
-                variant={activeFilter === "ready" ? "default" : "outline"}
-                size="sm"
+                🌈 All
+              </button>
+              <button
+                className={`px-4 py-2 rounded-2xl text-sm font-bold transition-all duration-200 ${
+                  activeFilter === "ready"
+                    ? "btn-3d-green bg-green-500 text-white"
+                    : "bg-white border-2 border-green-100 text-green-600 hover:border-green-300 hover:text-green-700 shadow-sm"
+                }`}
                 onClick={() => setActiveFilter("ready")}
               >
-                Ready
-              </Button>
-              <Button
-                variant={
-                  activeFilter === "needs-observation" ? "default" : "outline"
-                }
-                size="sm"
+                ✅ Ready
+              </button>
+              <button
+                className={`px-4 py-2 rounded-2xl text-sm font-bold transition-all duration-200 ${
+                  activeFilter === "needs-observation"
+                    ? "btn-3d bg-amber-500 text-white"
+                    : "bg-white border-2 border-amber-100 text-amber-600 hover:border-amber-300 hover:text-amber-700 shadow-sm"
+                }`}
                 onClick={() => setActiveFilter("needs-observation")}
               >
-                Needs Observation
-              </Button>
-              <Button
-                variant={
-                  activeFilter === "pending-review" ? "default" : "outline"
-                }
-                size="sm"
+                👀 Needs Observation
+              </button>
+              <button
+                className={`px-4 py-2 rounded-2xl text-sm font-bold transition-all duration-200 ${
+                  activeFilter === "pending-review"
+                    ? "btn-3d-purple bg-purple-500 text-white"
+                    : "bg-white border-2 border-purple-100 text-purple-600 hover:border-purple-300 hover:text-purple-700 shadow-sm"
+                }`}
                 onClick={() => setActiveFilter("pending-review")}
               >
-                Pending Review
-              </Button>
+                ⏳ Pending Review
+              </button>
             </div>
             <div className="relative sm:ml-auto sm:max-w-xs w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#FF6B6B]/60" />
               <input
                 type="text"
                 placeholder="Search by name, ID, or school..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 rounded-md border border-input bg-background px-3 pl-9 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="input-playful w-full h-10 px-4 pl-10 text-sm"
               />
             </div>
           </div>
 
           {/* Recent Applications Table */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">
-                Recent Applications
-                <span className="ml-2 text-sm font-normal text-muted-foreground">
-                  ({filteredStudents.length} total)
+          <Card className="card-3d overflow-hidden">
+            <CardHeader className="pb-3 bg-gradient-to-r from-purple-50/50 to-pink-50/50">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                📋 Recent Applications
+                <span className="ml-1 text-sm font-normal text-muted-foreground badge-3d bg-purple-100 text-purple-700">
+                  {filteredStudents.length} total
                 </span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {recentStudents.length === 0 ? (
                 <div className="py-12 text-center text-muted-foreground">
-                  <Users className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                  <p className="font-medium">No applications found</p>
+                  <div className="icon-bubble icon-bubble-purple h-16 w-16 mx-auto mb-4 opacity-50">
+                    <Users className="h-8 w-8" />
+                  </div>
+                  <p className="font-bold text-lg">No applications found</p>
                   <p className="text-sm mt-1">
                     Try adjusting your filters or search query
                   </p>
@@ -581,32 +622,32 @@ export default function AdminDashboard() {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[120px]">Application ID</TableHead>
-                        <TableHead>Child Name</TableHead>
-                        <TableHead className="hidden sm:table-cell">School Applied</TableHead>
-                        <TableHead className="text-center">Readiness Score</TableHead>
-                        <TableHead className="text-center">Status</TableHead>
-                        <TableHead className="hidden md:table-cell">Date</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                      <TableRow className="border-b-2 border-purple-100/50 hover:bg-transparent">
+                        <TableHead className="w-[120px] font-bold text-purple-700/70">Application ID</TableHead>
+                        <TableHead className="font-bold text-purple-700/70">Child Name</TableHead>
+                        <TableHead className="hidden sm:table-cell font-bold text-purple-700/70">School Applied</TableHead>
+                        <TableHead className="text-center font-bold text-purple-700/70">Readiness Score</TableHead>
+                        <TableHead className="text-center font-bold text-purple-700/70">Status</TableHead>
+                        <TableHead className="hidden md:table-cell font-bold text-purple-700/70">Date</TableHead>
+                        <TableHead className="text-right font-bold text-purple-700/70">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {recentStudents.map((student) => {
                         const config = statusConfig[student.status] || statusConfig.DRAFT;
                         return (
-                          <TableRow key={student.id}>
-                            <TableCell className="font-mono text-xs">
+                          <TableRow key={student.id} className="border-b border-purple-50 hover:bg-purple-50/30 transition-colors">
+                            <TableCell className="font-mono text-xs font-semibold">
                               {student.applicationId}
                             </TableCell>
-                            <TableCell className="font-medium">
+                            <TableCell className="font-semibold text-foreground">
                               {student.childName}
                             </TableCell>
                             <TableCell className="hidden sm:table-cell text-muted-foreground">
                               {student.schoolApplied || "N/A"}
                             </TableCell>
                             <TableCell className="text-center">
-                              <span className={getScoreColor(student.readinessScore)}>
+                              <span className={`text-sm font-bold ${getScoreColor(student.readinessScore)}`}>
                                 {student.readinessScore !== null
                                   ? Math.round(student.readinessScore)
                                   : "--"}
@@ -615,7 +656,7 @@ export default function AdminDashboard() {
                             <TableCell className="text-center">
                               <Badge
                                 variant="outline"
-                                className={config.color}
+                                className={`badge-3d text-xs ${config.color}`}
                               >
                                 {config.label}
                               </Badge>
@@ -625,9 +666,8 @@ export default function AdminDashboard() {
                             </TableCell>
                             <TableCell className="text-right">
                               <Button
-                                variant="ghost"
+                                className="gap-1.5 rounded-xl bg-[#FF6B6B]/10 text-[#FF6B6B] hover:bg-[#FF6B6B] hover:text-white font-bold border-0 shadow-sm transition-all duration-200"
                                 size="sm"
-                                className="gap-1.5"
                                 onClick={() => handleViewStudent(student.id)}
                               >
                                 <Eye className="h-3.5 w-3.5" />

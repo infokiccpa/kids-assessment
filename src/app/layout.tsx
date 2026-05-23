@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "KinderAssess - AI Kindergarten Readiness Assessment",
   description:
-    "AI-powered kindergarten admission assessment platform. Evaluate children's readiness through smart questionnaires, video analysis, and instant comprehensive reports.",
+    "A fun, AI-powered kindergarten admission assessment platform! Evaluate children's readiness through playful questionnaires, video analysis, and instant comprehensive reports.",
   keywords: [
     "kindergarten",
     "readiness",
@@ -25,12 +25,14 @@ export const metadata: Metadata = {
     "admission",
     "child development",
     "education",
+    "kids",
+    "preschool",
   ],
   authors: [{ name: "KinderAssess Team" }],
   openGraph: {
     title: "KinderAssess - AI Kindergarten Readiness Assessment",
     description:
-      "Smart, AI-powered admission assessment for kindergarten readiness",
+      "Fun and smart AI-powered admission assessment for kindergarten readiness!",
     type: "website",
   },
 };

@@ -51,32 +51,32 @@ function getScoreInterpretation(score: number): {
   if (score >= 80) {
     return {
       label: "Ready",
-      color: "#16a34a",
-      bgColor: "bg-green-50",
-      textColor: "text-green-700",
+      color: "#6BCB77",
+      bgColor: "bg-[#6BCB77]/15",
+      textColor: "text-[#27AE60]",
     };
   }
   if (score >= 60) {
     return {
       label: "Moderate",
-      color: "#d97706",
-      bgColor: "bg-amber-50",
-      textColor: "text-amber-700",
+      color: "#FEC163",
+      bgColor: "bg-[#FEC163]/15",
+      textColor: "text-[#D4A017]",
     };
   }
   if (score >= 40) {
     return {
       label: "Needs Support",
-      color: "#ea580c",
-      bgColor: "bg-orange-50",
-      textColor: "text-orange-700",
+      color: "#FF8E53",
+      bgColor: "bg-[#FF8E53]/15",
+      textColor: "text-[#E67E22]",
     };
   }
   return {
     label: "Requires Attention",
-    color: "#dc2626",
-    bgColor: "bg-red-50",
-    textColor: "text-red-700",
+    color: "#FF6B6B",
+    bgColor: "bg-[#FF6B6B]/15",
+    textColor: "text-[#E74C3C]",
   };
 }
 
@@ -87,40 +87,54 @@ function getLevelBadge(level: string): {
   const lower = level.toLowerCase();
   if (lower.includes("good")) {
     return {
-      className: "bg-green-100 text-green-700 border-green-300",
+      className: "badge-3d bg-[#6BCB77]/20 text-[#27AE60] border-[#6BCB77]/30",
       icon: <CheckCircle2 className="size-3.5" />,
     };
   }
   if (lower.includes("moderate")) {
     return {
-      className: "bg-amber-100 text-amber-700 border-amber-300",
+      className: "badge-3d bg-[#FEC163]/20 text-[#D4A017] border-[#FEC163]/30",
       icon: <AlertCircle className="size-3.5" />,
     };
   }
   return {
-    className: "bg-red-100 text-red-700 border-red-300",
+    className: "badge-3d bg-[#FF6B6B]/20 text-[#E74C3C] border-[#FF6B6B]/30",
     icon: <AlertTriangle className="size-3.5" />,
   };
 }
 
-// Circular gauge component using SVG
+// Circular gauge component using SVG with vibrant gradient stroke and 3D shadow
 function ScoreGauge({ score }: { score: number }) {
   const interpretation = getScoreInterpretation(score);
   const radius = 80;
-  const strokeWidth = 12;
+  const strokeWidth = 14;
   const normalizedRadius = radius - strokeWidth / 2;
   const circumference = normalizedRadius * 2 * Math.PI;
   const strokeDashoffset = circumference - (score / 100) * circumference;
   const center = radius;
 
+  const gradientId = "scoreGradient";
+
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="relative">
+    <div className="flex flex-col items-center gap-4">
+      <div className="relative drop-shadow-lg">
         <svg
           height={radius * 2}
           width={radius * 2}
           className="transform -rotate-90"
         >
+          <defs>
+            <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FF6B6B" />
+              <stop offset="25%" stopColor="#FEC163" />
+              <stop offset="50%" stopColor="#6BCB77" />
+              <stop offset="75%" stopColor="#4D96FF" />
+              <stop offset="100%" stopColor="#9B59B6" />
+            </linearGradient>
+            <filter id="gaugeShadow">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.2" />
+            </filter>
+          </defs>
           {/* Background circle */}
           <circle
             stroke="#e5e7eb"
@@ -129,10 +143,11 @@ function ScoreGauge({ score }: { score: number }) {
             r={normalizedRadius}
             cx={center}
             cy={center}
+            strokeLinecap="round"
           />
-          {/* Progress arc */}
+          {/* Progress arc with gradient */}
           <circle
-            stroke={interpretation.color}
+            stroke={`url(#${gradientId})`}
             fill="transparent"
             strokeWidth={strokeWidth}
             strokeDasharray={`${circumference} ${circumference}`}
@@ -141,17 +156,21 @@ function ScoreGauge({ score }: { score: number }) {
             r={normalizedRadius}
             cx={center}
             cy={center}
+            filter="url(#gaugeShadow)"
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-4xl font-bold" style={{ color: interpretation.color }}>
+          <span
+            className="text-5xl font-black"
+            style={{ color: interpretation.color }}
+          >
             {Math.round(score)}
           </span>
-          <span className="text-xs text-muted-foreground">out of 100</span>
+          <span className="text-xs text-muted-foreground font-semibold">out of 100</span>
         </div>
       </div>
       <Badge
-        className={`${interpretation.bgColor} ${interpretation.textColor} border text-sm px-3 py-1`}
+        className={`badge-3d ${interpretation.bgColor} ${interpretation.textColor} border text-sm px-4 py-1.5 font-bold`}
       >
         {interpretation.label}
       </Badge>
@@ -219,7 +238,10 @@ export default function Results() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <div className="text-center">
+          <Loader2 className="size-10 animate-spin text-[#FF6B6B] mx-auto mb-3" />
+          <p className="text-muted-foreground font-medium">Loading results...</p>
+        </div>
       </div>
     );
   }
@@ -227,10 +249,15 @@ export default function Results() {
   if (error) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 text-center">
-        <AlertCircle className="size-12 mx-auto text-destructive mb-4" />
-        <h2 className="text-lg font-semibold mb-2">Error Loading Results</h2>
+        <div className="icon-bubble icon-bubble-coral size-16 mx-auto mb-4 p-4">
+          <AlertCircle className="size-8" />
+        </div>
+        <h2 className="text-lg font-bold mb-2">Error Loading Results</h2>
         <p className="text-muted-foreground mb-4">{error}</p>
-        <Button onClick={() => setCurrentView("parent-dashboard")}>
+        <Button
+          onClick={() => setCurrentView("parent-dashboard")}
+          className="btn-3d bg-[#FF6B6B] hover:bg-[#FF5252] text-white border-none rounded-xl font-semibold"
+        >
           Go to Dashboard
         </Button>
       </div>
@@ -240,15 +267,20 @@ export default function Results() {
   if (!student?.aiAnalysis || student.aiAnalysis.analysisStatus !== "COMPLETED") {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 text-center">
-        <Loader2 className="size-12 animate-spin text-primary mx-auto mb-4" />
-        <h2 className="text-lg font-semibold mb-2">
+        <div className="animate-sparkle inline-block mb-4">
+          <Loader2 className="size-12 animate-spin text-[#FF6B6B] mx-auto" />
+        </div>
+        <h2 className="text-lg font-bold mb-2">
           Analysis Not Yet Available
         </h2>
         <p className="text-muted-foreground mb-4">
           The AI analysis is still being processed. Please check back in a few
           moments.
         </p>
-        <Button onClick={() => setCurrentView("parent-dashboard")}>
+        <Button
+          onClick={() => setCurrentView("parent-dashboard")}
+          className="btn-3d bg-[#FF6B6B] hover:bg-[#FF5252] text-white border-none rounded-xl font-semibold"
+        >
           Go to Dashboard
         </Button>
       </div>
@@ -268,8 +300,8 @@ export default function Results() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+      <div className="mb-6 animate-bounce-in">
+        <h1 className="text-2xl sm:text-3xl font-bold rainbow-text">
           Assessment Results
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -277,138 +309,159 @@ export default function Results() {
         </p>
       </div>
 
-      {/* Score Gauge */}
-      <Card className="mb-4">
-        <CardContent className="p-6 flex flex-col items-center">
-          <h2 className="text-lg font-semibold mb-4">Readiness Score</h2>
+      {/* Score Gauge - Vibrant celebratory feel */}
+      <Card className="mb-5 card-3d bg-playful-card-coral">
+        <CardContent className="p-8 flex flex-col items-center">
+          <h2 className="text-lg font-bold mb-5 flex items-center gap-2.5">
+            <span className="icon-bubble icon-bubble-coral size-9 p-2">
+              <GraduationCap className="size-5" />
+            </span>
+            Readiness Score
+          </h2>
           <ScoreGauge score={score} />
-          <p className="text-sm text-muted-foreground mt-2 text-center">
+          <div className="divider-rainbow mt-5 w-48" />
+          <p className="text-sm text-muted-foreground mt-3 text-center font-medium">
             Application ID: {student.applicationId}
           </p>
         </CardContent>
       </Card>
 
       {/* Behavioral Assessment */}
-      <Card className="mb-4">
+      <Card className="mb-5 card-3d bg-playful-card-blue">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Brain className="size-5 text-primary" />
+          <CardTitle className="flex items-center gap-2.5 text-base">
+            <span className="icon-bubble icon-bubble-purple size-9 p-2">
+              <Brain className="size-5" />
+            </span>
             Behavioral Assessment
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Attention Level */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <Brain className="size-4 text-amber-600" />
-              <span>Attention Level</span>
+            <div className="flex items-center gap-2.5 text-sm">
+              <span className="icon-bubble icon-bubble-yellow size-8 p-1.5">
+                <Brain className="size-4" />
+              </span>
+              <span className="font-medium">Attention Level</span>
             </div>
             <Badge
-              variant="outline"
               className={getLevelBadge(analysis.attentionLevel).className}
             >
               {getLevelBadge(analysis.attentionLevel).icon}
-              {analysis.attentionLevel}
+              <span className="ml-1">{analysis.attentionLevel}</span>
             </Badge>
           </div>
 
-          <Separator />
+          <div className="divider-rainbow" />
 
           {/* Instruction Following */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <BookOpen className="size-4 text-blue-600" />
-              <span>Instruction Following</span>
+            <div className="flex items-center gap-2.5 text-sm">
+              <span className="icon-bubble icon-bubble-blue size-8 p-1.5">
+                <BookOpen className="size-4" />
+              </span>
+              <span className="font-medium">Instruction Following</span>
             </div>
             <Badge
-              variant="outline"
               className={
                 getLevelBadge(analysis.instructionFollowing).className
               }
             >
               {getLevelBadge(analysis.instructionFollowing).icon}
-              {analysis.instructionFollowing}
+              <span className="ml-1">{analysis.instructionFollowing}</span>
             </Badge>
           </div>
 
-          <Separator />
+          <div className="divider-rainbow" />
 
           {/* Emotional Behavior */}
           <div>
-            <div className="flex items-center gap-2 text-sm mb-2">
-              <Heart className="size-4 text-rose-500" />
+            <div className="flex items-center gap-2.5 text-sm mb-2">
+              <span className="icon-bubble icon-bubble-pink size-8 p-1.5">
+                <Heart className="size-4" />
+              </span>
               <span className="font-medium">Emotional Behavior</span>
             </div>
-            <p className="text-sm text-muted-foreground pl-6">
+            <p className="text-sm text-muted-foreground pl-11 leading-relaxed">
               {analysis.emotionalBehavior}
             </p>
           </div>
 
-          <Separator />
+          <div className="divider-rainbow" />
 
           {/* Social Readiness */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <Users className="size-4 text-emerald-600" />
-              <span>Social Readiness</span>
+            <div className="flex items-center gap-2.5 text-sm">
+              <span className="icon-bubble icon-bubble-green size-8 p-1.5">
+                <Users className="size-4" />
+              </span>
+              <span className="font-medium">Social Readiness</span>
             </div>
             <Badge
-              variant="outline"
               className={getLevelBadge(analysis.socialReadiness).className}
             >
               {getLevelBadge(analysis.socialReadiness).icon}
-              {analysis.socialReadiness}
+              <span className="ml-1">{analysis.socialReadiness}</span>
             </Badge>
           </div>
 
-          <Separator />
+          <div className="divider-rainbow" />
 
           {/* Classroom Adaptability */}
           <div>
-            <div className="flex items-center gap-2 text-sm mb-2">
-              <GraduationCap className="size-4 text-purple-600" />
+            <div className="flex items-center gap-2.5 text-sm mb-2">
+              <span className="icon-bubble icon-bubble-purple size-8 p-1.5">
+                <GraduationCap className="size-4" />
+              </span>
               <span className="font-medium">Classroom Adaptability</span>
             </div>
-            <p className="text-sm text-muted-foreground pl-6">
+            <p className="text-sm text-muted-foreground pl-11 leading-relaxed">
               {analysis.classroomAdaptability}
             </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Teacher Recommendations */}
-      <Card className="mb-4 border-primary/20 bg-primary/5">
+      {/* Teacher Recommendations - Playful green gradient */}
+      <Card className="mb-5 card-3d bg-playful-card-green border-2 border-[#6BCB77]/30">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <GraduationCap className="size-5 text-primary" />
+          <CardTitle className="flex items-center gap-2.5 text-base">
+            <span className="icon-bubble icon-bubble-green size-9 p-2">
+              <GraduationCap className="size-5" />
+            </span>
             Teacher Recommendations
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm leading-relaxed">
+          <p className="text-sm leading-relaxed pl-1">
             {analysis.teacherRecommendation}
           </p>
         </CardContent>
       </Card>
 
-      {/* Risk Flags */}
+      {/* Risk Flags - Amber 3D styling */}
       {riskFlags.length > 0 && (
-        <Card className="mb-4 border-amber-200">
+        <Card className="mb-5 card-3d border-2 border-[#FF8E53]/40 bg-playful-card-yellow">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base text-amber-700">
-              <ShieldAlert className="size-5 text-amber-600" />
+            <CardTitle className="flex items-center gap-2.5 text-base text-[#E67E22]">
+              <span className="icon-bubble icon-bubble-yellow size-9 p-2">
+                <ShieldAlert className="size-5" />
+              </span>
               Areas of Attention
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {riskFlags.map((flag, idx) => (
                 <div
                   key={idx}
-                  className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-100"
+                  className="flex items-start gap-2.5 p-3 rounded-xl bg-[#FF8E53]/10 border border-[#FF8E53]/20 shadow-sm"
                 >
-                  <AlertTriangle className="size-4 text-amber-600 shrink-0 mt-0.5" />
-                  <span className="text-sm text-amber-800">{flag}</span>
+                  <span className="icon-bubble icon-bubble-yellow size-6 p-1 shrink-0 mt-0.5">
+                    <AlertTriangle className="size-3" />
+                  </span>
+                  <span className="text-sm text-[#C0392B] font-medium">{flag}</span>
                 </div>
               ))}
             </div>
@@ -417,12 +470,12 @@ export default function Results() {
       )}
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 mt-6">
+      <div className="flex flex-col sm:flex-row gap-3 mt-8">
         <Button
           variant="outline"
           onClick={handleDownloadReport}
           disabled={downloading}
-          className="gap-1.5 flex-1"
+          className="gap-1.5 flex-1 btn-3d bg-white border-[#4D96FF]/30 text-[#2980B9] hover:bg-[#4D96FF]/10 rounded-xl font-semibold"
         >
           {downloading ? (
             <>
@@ -439,18 +492,20 @@ export default function Results() {
         <Button
           variant="default"
           onClick={() => setCurrentView("parent-dashboard")}
-          className="gap-1.5 flex-1"
+          className="gap-1.5 flex-1 btn-3d-purple bg-[#9B59B6] hover:bg-[#8E44AD] text-white border-none rounded-xl font-semibold"
         >
           <LayoutDashboard className="size-4" />
           Back to Dashboard
         </Button>
       </div>
 
-      {/* Disclaimer Footer */}
-      <div className="mt-8 p-4 rounded-lg bg-muted/50 border text-center">
-        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <FileText className="size-4" />
-          <span>
+      {/* Disclaimer Footer - Subtle playful styling */}
+      <div className="mt-8 p-5 rounded-2xl bg-playful-card-yellow/50 border-2 border-[#FEC163]/20 text-center">
+        <div className="flex items-center justify-center gap-2.5 text-sm text-muted-foreground">
+          <span className="icon-bubble icon-bubble-yellow size-7 p-1.5">
+            <FileText className="size-3.5" />
+          </span>
+          <span className="font-medium">
             This is an AI-assisted educational readiness observation and not a
             medical diagnosis.
           </span>

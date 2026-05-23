@@ -29,10 +29,10 @@ import {
 } from "lucide-react";
 
 const STEPS = [
-  { number: 1, title: "Child Information", icon: Baby },
-  { number: 2, title: "Parent Information", icon: Users },
-  { number: 3, title: "School Selection", icon: School },
-  { number: 4, title: "Consent & Review", icon: ShieldCheck },
+  { number: 1, title: "Child Information", icon: Baby, color: "#FF6B6B", iconBubble: "icon-bubble-coral", cardBg: "bg-playful-card-coral" },
+  { number: 2, title: "Parent Information", icon: Users, color: "#9B59B6", iconBubble: "icon-bubble-purple", cardBg: "bg-playful-card-purple" },
+  { number: 3, title: "School Selection", icon: School, color: "#4D96FF", iconBubble: "icon-bubble-blue", cardBg: "bg-playful-card-blue" },
+  { number: 4, title: "Consent & Review", icon: ShieldCheck, color: "#6BCB77", iconBubble: "icon-bubble-green", cardBg: "bg-playful-card-green" },
 ];
 
 const SCHOOLS = [
@@ -191,19 +191,19 @@ export default function RegistrationForm() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-          New Application
+      <div className="mb-6 animate-bounce-in">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground flex items-center gap-2">
+          📝 New Application
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="text-muted-foreground mt-1 font-medium">
           Complete all steps to register your child for assessment
         </p>
       </div>
 
       {/* Progress Bar */}
       <div className="mb-8">
-        <Progress value={progressValue} className="h-2 mb-4" />
-        <div className="grid grid-cols-4 gap-2">
+        <Progress value={progressValue} className="h-3 mb-5 progress-playful rounded-full" />
+        <div className="grid grid-cols-4 gap-3">
           {STEPS.map((s) => {
             const Icon = s.icon;
             const isActive = s.number === step;
@@ -211,30 +211,34 @@ export default function RegistrationForm() {
             return (
               <div
                 key={s.number}
-                className={`flex flex-col items-center gap-1 text-center ${
-                  isActive
-                    ? "text-primary"
-                    : isCompleted
-                    ? "text-green-600"
-                    : "text-muted-foreground"
-                }`}
+                className={`flex flex-col items-center gap-2 text-center animate-bounce-in`}
+                style={{ animationDelay: `${s.number * 0.1}s` }}
               >
                 <div
-                  className={`flex items-center justify-center size-8 rounded-full border-2 transition-colors ${
+                  className={`flex items-center justify-center size-12 rounded-xl transition-all ${
                     isActive
-                      ? "border-primary bg-primary/10"
+                      ? `icon-bubble ${s.iconBubble} step-3d scale-110`
                       : isCompleted
-                      ? "border-green-600 bg-green-50"
-                      : "border-muted-foreground/30"
+                      ? "icon-bubble icon-bubble-green step-3d"
+                      : "bg-muted/50 border-2 border-muted-foreground/20 rounded-xl"
                   }`}
                 >
                   {isCompleted ? (
-                    <CheckCircle2 className="size-4" />
+                    <CheckCircle2 className="size-5" />
                   ) : (
-                    <Icon className="size-4" />
+                    <Icon className="size-5" />
                   )}
                 </div>
-                <span className="text-xs font-medium hidden sm:block">
+                <span
+                  className={`text-xs font-bold hidden sm:block ${
+                    isActive
+                      ? ""
+                      : isCompleted
+                      ? "text-green-600"
+                      : "text-muted-foreground"
+                  }`}
+                  style={isActive ? { color: s.color } : undefined}
+                >
                   {s.title}
                 </span>
               </div>
@@ -243,125 +247,123 @@ export default function RegistrationForm() {
         </div>
       </div>
 
+      <div className="divider-rainbow mb-6" />
+
       {/* Step Content */}
       {step === 1 && (
-        <Card>
+        <Card className="card-3d border-l-4 border-l-[#FF6B6B] bg-playful-card-coral animate-bounce-in">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Baby className="size-5 text-primary" />
-              Child Information
+            <CardTitle className="flex items-center gap-3">
+              <div className="icon-bubble icon-bubble-coral size-10 rounded-xl">
+                <Baby className="size-5" />
+              </div>
+              <span className="text-[#FF6B6B]">Child Information</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="childName">
-                Child Full Name <span className="text-destructive">*</span>
+              <Label htmlFor="childName" className="font-semibold text-sm">
+                Child Full Name <span className="text-[#FF6B6B]">*</span>
               </Label>
               <Input
                 id="childName"
                 value={formData.childName}
                 onChange={(e) => updateField("childName", e.target.value)}
                 placeholder="Enter child's full name"
-                className={errors.childName ? "border-destructive" : ""}
+                className={`input-playful mt-1.5 ${errors.childName ? "border-[#FF6B6B]" : ""}`}
               />
               {errors.childName && (
-                <p className="text-sm text-destructive mt-1">
+                <p className="text-sm text-[#FF6B6B] mt-1 font-medium">
                   {errors.childName}
                 </p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="dateOfBirth">
-                Date of Birth <span className="text-destructive">*</span>
+              <Label htmlFor="dateOfBirth" className="font-semibold text-sm">
+                Date of Birth <span className="text-[#FF6B6B]">*</span>
               </Label>
               <Input
                 id="dateOfBirth"
                 type="date"
                 value={formData.dateOfBirth}
                 onChange={(e) => updateField("dateOfBirth", e.target.value)}
-                className={errors.dateOfBirth ? "border-destructive" : ""}
+                className={`input-playful mt-1.5 ${errors.dateOfBirth ? "border-[#FF6B6B]" : ""}`}
               />
               {errors.dateOfBirth && (
-                <p className="text-sm text-destructive mt-1">
+                <p className="text-sm text-[#FF6B6B] mt-1 font-medium">
                   {errors.dateOfBirth}
                 </p>
               )}
             </div>
 
             <div>
-              <Label>
-                Gender <span className="text-destructive">*</span>
+              <Label className="font-semibold text-sm">
+                Gender <span className="text-[#FF6B6B]">*</span>
               </Label>
               <RadioGroup
                 value={formData.gender}
                 onValueChange={(val) => updateField("gender", val)}
                 className="flex gap-6 mt-2"
               >
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="Male" id="male" />
-                  <Label htmlFor="male" className="font-normal cursor-pointer">
-                    Male
-                  </Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="Female" id="female" />
-                  <Label
-                    htmlFor="female"
-                    className="font-normal cursor-pointer"
-                  >
-                    Female
-                  </Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="Other" id="other" />
-                  <Label htmlFor="other" className="font-normal cursor-pointer">
-                    Other
-                  </Label>
-                </div>
+                {["Male", "Female", "Other"].map((g) => (
+                  <div key={g} className="flex items-center gap-2">
+                    <RadioGroupItem
+                      value={g}
+                      id={g.toLowerCase()}
+                      className="border-[#FF6B6B] text-[#FF6B6B]"
+                    />
+                    <Label htmlFor={g.toLowerCase()} className="font-medium cursor-pointer">
+                      {g}
+                    </Label>
+                  </div>
+                ))}
               </RadioGroup>
               {errors.gender && (
-                <p className="text-sm text-destructive mt-1">
+                <p className="text-sm text-[#FF6B6B] mt-1 font-medium">
                   {errors.gender}
                 </p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="nationality">Nationality</Label>
+              <Label htmlFor="nationality" className="font-semibold text-sm">Nationality</Label>
               <Input
                 id="nationality"
                 value={formData.nationality}
                 onChange={(e) => updateField("nationality", e.target.value)}
                 placeholder="Enter nationality"
+                className="input-playful mt-1.5"
               />
             </div>
 
             <div>
-              <Label htmlFor="languagesSpoken">Languages Spoken</Label>
+              <Label htmlFor="languagesSpoken" className="font-semibold text-sm">Languages Spoken</Label>
               <Input
                 id="languagesSpoken"
                 value={formData.languagesSpoken}
                 onChange={(e) => updateField("languagesSpoken", e.target.value)}
                 placeholder="e.g. English, Arabic, French"
+                className="input-playful mt-1.5"
               />
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1 font-medium">
                 Separate multiple languages with commas
               </p>
             </div>
 
             <div>
-              <Label htmlFor="previousSchool">Previous School</Label>
+              <Label htmlFor="previousSchool" className="font-semibold text-sm">Previous School</Label>
               <Input
                 id="previousSchool"
                 value={formData.previousSchool}
                 onChange={(e) => updateField("previousSchool", e.target.value)}
                 placeholder="Enter previous school name (if any)"
+                className="input-playful mt-1.5"
               />
             </div>
 
             <div>
-              <Label htmlFor="specialMedicalNotes">Special Medical Notes</Label>
+              <Label htmlFor="specialMedicalNotes" className="font-semibold text-sm">Special Medical Notes</Label>
               <Textarea
                 id="specialMedicalNotes"
                 value={formData.specialMedicalNotes}
@@ -370,6 +372,7 @@ export default function RegistrationForm() {
                 }
                 placeholder="Any medical conditions, allergies, or special needs"
                 rows={3}
+                className="input-playful mt-1.5"
               />
             </div>
           </CardContent>
@@ -377,53 +380,55 @@ export default function RegistrationForm() {
       )}
 
       {step === 2 && (
-        <Card>
+        <Card className="card-3d border-l-4 border-l-[#9B59B6] bg-playful-card-purple animate-bounce-in">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="size-5 text-primary" />
-              Parent Information
+            <CardTitle className="flex items-center gap-3">
+              <div className="icon-bubble icon-bubble-purple size-10 rounded-xl">
+                <Users className="size-5" />
+              </div>
+              <span className="text-[#9B59B6]">Parent Information</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="fatherName">
-                Father Name <span className="text-destructive">*</span>
+              <Label htmlFor="fatherName" className="font-semibold text-sm">
+                Father Name <span className="text-[#FF6B6B]">*</span>
               </Label>
               <Input
                 id="fatherName"
                 value={formData.fatherName}
                 onChange={(e) => updateField("fatherName", e.target.value)}
                 placeholder="Enter father's full name"
-                className={errors.fatherName ? "border-destructive" : ""}
+                className={`input-playful mt-1.5 ${errors.fatherName ? "border-[#FF6B6B]" : ""}`}
               />
               {errors.fatherName && (
-                <p className="text-sm text-destructive mt-1">
+                <p className="text-sm text-[#FF6B6B] mt-1 font-medium">
                   {errors.fatherName}
                 </p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="motherName">
-                Mother Name <span className="text-destructive">*</span>
+              <Label htmlFor="motherName" className="font-semibold text-sm">
+                Mother Name <span className="text-[#FF6B6B]">*</span>
               </Label>
               <Input
                 id="motherName"
                 value={formData.motherName}
                 onChange={(e) => updateField("motherName", e.target.value)}
                 placeholder="Enter mother's full name"
-                className={errors.motherName ? "border-destructive" : ""}
+                className={`input-playful mt-1.5 ${errors.motherName ? "border-[#FF6B6B]" : ""}`}
               />
               {errors.motherName && (
-                <p className="text-sm text-destructive mt-1">
+                <p className="text-sm text-[#FF6B6B] mt-1 font-medium">
                   {errors.motherName}
                 </p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="mobileNumber">
-                Mobile Number <span className="text-destructive">*</span>
+              <Label htmlFor="mobileNumber" className="font-semibold text-sm">
+                Mobile Number <span className="text-[#FF6B6B]">*</span>
               </Label>
               <Input
                 id="mobileNumber"
@@ -431,18 +436,18 @@ export default function RegistrationForm() {
                 value={formData.mobileNumber}
                 onChange={(e) => updateField("mobileNumber", e.target.value)}
                 placeholder="Enter mobile number"
-                className={errors.mobileNumber ? "border-destructive" : ""}
+                className={`input-playful mt-1.5 ${errors.mobileNumber ? "border-[#FF6B6B]" : ""}`}
               />
               {errors.mobileNumber && (
-                <p className="text-sm text-destructive mt-1">
+                <p className="text-sm text-[#FF6B6B] mt-1 font-medium">
                   {errors.mobileNumber}
                 </p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="parentEmail">
-                Email <span className="text-destructive">*</span>
+              <Label htmlFor="parentEmail" className="font-semibold text-sm">
+                Email <span className="text-[#FF6B6B]">*</span>
               </Label>
               <Input
                 id="parentEmail"
@@ -450,18 +455,18 @@ export default function RegistrationForm() {
                 value={formData.parentEmail}
                 onChange={(e) => updateField("parentEmail", e.target.value)}
                 placeholder="Enter email address"
-                className={errors.parentEmail ? "border-destructive" : ""}
+                className={`input-playful mt-1.5 ${errors.parentEmail ? "border-[#FF6B6B]" : ""}`}
               />
               {errors.parentEmail && (
-                <p className="text-sm text-destructive mt-1">
+                <p className="text-sm text-[#FF6B6B] mt-1 font-medium">
                   {errors.parentEmail}
                 </p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="address">
-                Address <span className="text-destructive">*</span>
+              <Label htmlFor="address" className="font-semibold text-sm">
+                Address <span className="text-[#FF6B6B]">*</span>
               </Label>
               <Textarea
                 id="address"
@@ -469,10 +474,10 @@ export default function RegistrationForm() {
                 onChange={(e) => updateField("address", e.target.value)}
                 placeholder="Enter full residential address"
                 rows={3}
-                className={errors.address ? "border-destructive" : ""}
+                className={`input-playful mt-1.5 ${errors.address ? "border-[#FF6B6B]" : ""}`}
               />
               {errors.address && (
-                <p className="text-sm text-destructive mt-1">
+                <p className="text-sm text-[#FF6B6B] mt-1 font-medium">
                   {errors.address}
                 </p>
               )}
@@ -482,25 +487,27 @@ export default function RegistrationForm() {
       )}
 
       {step === 3 && (
-        <Card>
+        <Card className="card-3d border-l-4 border-l-[#4D96FF] bg-playful-card-blue animate-bounce-in">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <School className="size-5 text-primary" />
-              School Selection
+            <CardTitle className="flex items-center gap-3">
+              <div className="icon-bubble icon-bubble-blue size-10 rounded-xl">
+                <School className="size-5" />
+              </div>
+              <span className="text-[#4D96FF]">School Selection</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>
-                School Applied For <span className="text-destructive">*</span>
+              <Label className="font-semibold text-sm">
+                School Applied For <span className="text-[#FF6B6B]">*</span>
               </Label>
               <Select
                 value={formData.schoolApplied}
                 onValueChange={(val) => updateField("schoolApplied", val)}
               >
                 <SelectTrigger
-                  className={`w-full mt-1.5 ${
-                    errors.schoolApplied ? "border-destructive" : ""
+                  className={`w-full mt-1.5 input-playful ${
+                    errors.schoolApplied ? "border-[#FF6B6B]" : ""
                   }`}
                 >
                   <SelectValue placeholder="Select a school" />
@@ -514,23 +521,23 @@ export default function RegistrationForm() {
                 </SelectContent>
               </Select>
               {errors.schoolApplied && (
-                <p className="text-sm text-destructive mt-1">
+                <p className="text-sm text-[#FF6B6B] mt-1 font-medium">
                   {errors.schoolApplied}
                 </p>
               )}
             </div>
 
             <div>
-              <Label>
-                Grade Applied For <span className="text-destructive">*</span>
+              <Label className="font-semibold text-sm">
+                Grade Applied For <span className="text-[#FF6B6B]">*</span>
               </Label>
               <Select
                 value={formData.gradeApplied}
                 onValueChange={(val) => updateField("gradeApplied", val)}
               >
                 <SelectTrigger
-                  className={`w-full mt-1.5 ${
-                    errors.gradeApplied ? "border-destructive" : ""
+                  className={`w-full mt-1.5 input-playful ${
+                    errors.gradeApplied ? "border-[#FF6B6B]" : ""
                   }`}
                 >
                   <SelectValue placeholder="Select a grade" />
@@ -544,7 +551,7 @@ export default function RegistrationForm() {
                 </SelectContent>
               </Select>
               {errors.gradeApplied && (
-                <p className="text-sm text-destructive mt-1">
+                <p className="text-sm text-[#FF6B6B] mt-1 font-medium">
                   {errors.gradeApplied}
                 </p>
               )}
@@ -554,114 +561,125 @@ export default function RegistrationForm() {
       )}
 
       {step === 4 && (
-        <Card>
+        <Card className="card-3d border-l-4 border-l-[#6BCB77] bg-playful-card-green animate-bounce-in">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ShieldCheck className="size-5 text-primary" />
-              Consent & Review
+            <CardTitle className="flex items-center gap-3">
+              <div className="icon-bubble icon-bubble-green size-10 rounded-xl">
+                <ShieldCheck className="size-5" />
+              </div>
+              <span className="text-[#6BCB77]">Consent & Review</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Review Summary */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">
+              <h3 className="font-bold text-sm text-[#FF6B6B] uppercase tracking-wider flex items-center gap-2">
+                <div className="icon-bubble icon-bubble-coral size-6 rounded-lg">
+                  <Baby className="size-3" />
+                </div>
                 Child Information
               </h3>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                <div className="text-muted-foreground">Full Name</div>
-                <div className="font-medium">{formData.childName || "-"}</div>
-                <div className="text-muted-foreground">Date of Birth</div>
-                <div className="font-medium">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm bg-white/50 rounded-xl p-3">
+                <div className="text-muted-foreground font-medium">Full Name</div>
+                <div className="font-bold">{formData.childName || "-"}</div>
+                <div className="text-muted-foreground font-medium">Date of Birth</div>
+                <div className="font-bold">
                   {formData.dateOfBirth || "-"}
                 </div>
-                <div className="text-muted-foreground">Gender</div>
-                <div className="font-medium">{formData.gender || "-"}</div>
-                <div className="text-muted-foreground">Nationality</div>
-                <div className="font-medium">
+                <div className="text-muted-foreground font-medium">Gender</div>
+                <div className="font-bold">{formData.gender || "-"}</div>
+                <div className="text-muted-foreground font-medium">Nationality</div>
+                <div className="font-bold">
                   {formData.nationality || "-"}
                 </div>
-                <div className="text-muted-foreground">Languages</div>
-                <div className="font-medium">
+                <div className="text-muted-foreground font-medium">Languages</div>
+                <div className="font-bold">
                   {formData.languagesSpoken || "-"}
                 </div>
-                <div className="text-muted-foreground">Previous School</div>
-                <div className="font-medium">
+                <div className="text-muted-foreground font-medium">Previous School</div>
+                <div className="font-bold">
                   {formData.previousSchool || "-"}
                 </div>
-                <div className="text-muted-foreground col-span-2">
+                <div className="text-muted-foreground font-medium col-span-2">
                   Special Medical Notes
                 </div>
-                <div className="font-medium col-span-2">
+                <div className="font-bold col-span-2">
                   {formData.specialMedicalNotes || "None"}
                 </div>
               </div>
 
-              <div className="border-t pt-4" />
-              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">
+              <div className="divider-rainbow" />
+              <h3 className="font-bold text-sm text-[#9B59B6] uppercase tracking-wider flex items-center gap-2">
+                <div className="icon-bubble icon-bubble-purple size-6 rounded-lg">
+                  <Users className="size-3" />
+                </div>
                 Parent Information
               </h3>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                <div className="text-muted-foreground">Father</div>
-                <div className="font-medium">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm bg-white/50 rounded-xl p-3">
+                <div className="text-muted-foreground font-medium">Father</div>
+                <div className="font-bold">
                   {formData.fatherName || "-"}
                 </div>
-                <div className="text-muted-foreground">Mother</div>
-                <div className="font-medium">
+                <div className="text-muted-foreground font-medium">Mother</div>
+                <div className="font-bold">
                   {formData.motherName || "-"}
                 </div>
-                <div className="text-muted-foreground">Mobile</div>
-                <div className="font-medium">
+                <div className="text-muted-foreground font-medium">Mobile</div>
+                <div className="font-bold">
                   {formData.mobileNumber || "-"}
                 </div>
-                <div className="text-muted-foreground">Email</div>
-                <div className="font-medium">
+                <div className="text-muted-foreground font-medium">Email</div>
+                <div className="font-bold">
                   {formData.parentEmail || "-"}
                 </div>
-                <div className="text-muted-foreground col-span-2">Address</div>
-                <div className="font-medium col-span-2">
+                <div className="text-muted-foreground font-medium col-span-2">Address</div>
+                <div className="font-bold col-span-2">
                   {formData.address || "-"}
                 </div>
               </div>
 
-              <div className="border-t pt-4" />
-              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">
+              <div className="divider-rainbow" />
+              <h3 className="font-bold text-sm text-[#4D96FF] uppercase tracking-wider flex items-center gap-2">
+                <div className="icon-bubble icon-bubble-blue size-6 rounded-lg">
+                  <School className="size-3" />
+                </div>
                 School Selection
               </h3>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                <div className="text-muted-foreground">School</div>
-                <div className="font-medium">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm bg-white/50 rounded-xl p-3">
+                <div className="text-muted-foreground font-medium">School</div>
+                <div className="font-bold">
                   {formData.schoolApplied || "-"}
                 </div>
-                <div className="text-muted-foreground">Grade</div>
-                <div className="font-medium">
+                <div className="text-muted-foreground font-medium">Grade</div>
+                <div className="font-bold">
                   {formData.gradeApplied || "-"}
                 </div>
               </div>
             </div>
 
-            <div className="border-t pt-4" />
+            <div className="divider-rainbow" />
 
             {/* Consent */}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3 bg-[#6BCB7708] rounded-xl p-4 border-2 border-[#6BCB7720]">
               <Checkbox
                 id="consent"
                 checked={formData.consentGiven}
                 onCheckedChange={(checked) =>
                   updateField("consentGiven", checked === true)
                 }
-                className="mt-0.5"
+                className="mt-0.5 data-[state=checked]:bg-[#6BCB77] data-[state=checked]:border-[#6BCB77]"
               />
-              <Label htmlFor="consent" className="font-normal text-sm leading-relaxed cursor-pointer">
+              <Label htmlFor="consent" className="font-medium text-sm leading-relaxed cursor-pointer">
                 I consent to AI-assisted behavioral readiness assessment for
                 educational admission purposes only.
               </Label>
             </div>
             {errors.consentGiven && (
-              <p className="text-sm text-destructive">{errors.consentGiven}</p>
+              <p className="text-sm text-[#FF6B6B] font-medium">{errors.consentGiven}</p>
             )}
 
             {errors.submit && (
-              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              <div className="rounded-xl bg-[#FF6B6B10] p-4 text-sm text-[#FF6B6B] font-semibold border-2 border-[#FF6B6B20]">
                 {errors.submit}
               </div>
             )}
@@ -674,14 +692,17 @@ export default function RegistrationForm() {
         <Button
           variant="outline"
           onClick={step === 1 ? () => setCurrentView("parent-dashboard") : handleBack}
-          className="gap-1.5"
+          className="gap-1.5 rounded-xl border-2 font-semibold hover:bg-muted/50"
         >
           <ChevronLeft className="size-4" />
           {step === 1 ? "Dashboard" : "Back"}
         </Button>
 
         {step < 4 ? (
-          <Button onClick={handleNext} className="gap-1.5">
+          <Button
+            onClick={handleNext}
+            className="btn-3d bg-[#FF6B6B] hover:bg-[#FF5252] text-white gap-1.5 rounded-xl"
+          >
             Next
             <ChevronRight className="size-4" />
           </Button>
@@ -689,7 +710,7 @@ export default function RegistrationForm() {
           <Button
             onClick={handleSubmit}
             disabled={submitting}
-            className="gap-1.5"
+            className="btn-3d-green bg-[#6BCB77] hover:bg-[#5AB868] text-white gap-1.5 rounded-xl"
           >
             {submitting ? (
               <>

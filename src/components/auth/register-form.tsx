@@ -97,39 +97,47 @@ export default function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-8">
-      {/* Decorative background */}
+    <div className="min-h-screen flex flex-col items-center justify-center bg-playful-warm px-4 py-8 relative overflow-hidden">
+      {/* Floating decorative bubbles */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-accent/10 blur-3xl" />
-        <div className="absolute -bottom-20 -right-20 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
+        <div className="bubble w-72 h-72 bg-[#6BCB77] top-[-5rem] left-[-3rem]" />
+        <div className="bubble w-56 h-56 bg-[#9B59B6] bottom-[-2rem] right-[-2rem]" />
+        <div className="bubble w-40 h-40 bg-[#FEC163] top-[10%] right-[8%]" />
+        <div className="bubble w-32 h-32 bg-[#FF6B6B] bottom-[30%] left-[5%]" />
+        <div className="bubble w-24 h-24 bg-[#4D96FF] top-[50%] left-[10%]" />
+        <div className="bubble w-20 h-20 bg-[#FF8E53] top-[25%] right-[20%]" />
+        {/* Soft blurred glows */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-[#6BCB77]/10 blur-3xl" />
+        <div className="absolute -bottom-20 -right-20 w-80 h-80 rounded-full bg-[#9B59B6]/10 blur-3xl" />
+        <div className="absolute top-1/2 right-1/4 w-64 h-64 rounded-full bg-[#FEC163]/8 blur-3xl" />
       </div>
 
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md animate-bounce-in">
         {/* Logo / Brand */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <UserPlus className="h-6 w-6" />
+          <div className="mx-auto mb-4 icon-bubble icon-bubble-green h-16 w-16 rounded-2xl animate-wiggle">
+            <UserPlus className="h-8 w-8" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-3xl font-extrabold tracking-tight rainbow-text">
             Create Account
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Join KinderAssess to begin the assessment process
+          <p className="mt-2 text-sm text-[#8B7E74] font-medium">
+            Join KinderAssess to begin the assessment process 🌟
           </p>
         </div>
 
-        <Card className="border-border/50">
+        <Card className="card-3d rounded-2xl border-0 bg-white/90 backdrop-blur-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl">Register</CardTitle>
-            <CardDescription>
-              Fill in your details to create a new account
+            <CardTitle className="text-xl font-bold text-[#3D3028]">Register</CardTitle>
+            <CardDescription className="text-[#8B7E74]">
+              Fill in your details to create a new account 🎨
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Error Alert */}
               {error && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="rounded-xl border-2 border-red-200 bg-red-50/80">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
@@ -137,9 +145,9 @@ export default function RegisterForm() {
 
               {/* Success Alert */}
               {success && (
-                <Alert className="border-primary/20 bg-primary/5">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  <AlertDescription className="text-primary">
+                <Alert className="border-2 border-green-200 bg-green-50/80 rounded-xl">
+                  <CheckCircle2 className="h-4 w-4 text-[#6BCB77]" />
+                  <AlertDescription className="text-[#27AE60] font-medium">
                     {success}
                   </AlertDescription>
                 </Alert>
@@ -147,7 +155,7 @@ export default function RegisterForm() {
 
               {/* Name */}
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name" className="text-[#3D3028] font-semibold">Full Name</Label>
                 <Input
                   id="name"
                   type="text"
@@ -157,12 +165,13 @@ export default function RegisterForm() {
                   required
                   disabled={isLoading}
                   autoComplete="name"
+                  className="input-playful"
                 />
               </div>
 
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="reg-email">Email</Label>
+                <Label htmlFor="reg-email" className="text-[#3D3028] font-semibold">Email</Label>
                 <Input
                   id="reg-email"
                   type="email"
@@ -172,13 +181,14 @@ export default function RegisterForm() {
                   required
                   disabled={isLoading}
                   autoComplete="email"
+                  className="input-playful"
                 />
               </div>
 
               {/* Phone (optional) */}
               <div className="space-y-2">
-                <Label htmlFor="phone">
-                  Phone <span className="text-muted-foreground">(optional)</span>
+                <Label htmlFor="phone" className="text-[#3D3028] font-semibold">
+                  Phone <span className="text-[#8B7E74] font-normal">(optional)</span>
                 </Label>
                 <Input
                   id="phone"
@@ -188,12 +198,13 @@ export default function RegisterForm() {
                   onChange={(e) => setPhone(e.target.value)}
                   disabled={isLoading}
                   autoComplete="tel"
+                  className="input-playful"
                 />
               </div>
 
               {/* Password */}
               <div className="space-y-2">
-                <Label htmlFor="reg-password">Password</Label>
+                <Label htmlFor="reg-password" className="text-[#3D3028] font-semibold">Password</Label>
                 <div className="relative">
                   <Input
                     id="reg-password"
@@ -204,12 +215,12 @@ export default function RegisterForm() {
                     required
                     disabled={isLoading}
                     autoComplete="new-password"
-                    className="pr-10"
+                    className="input-playful pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8B7E74] hover:text-[#3D3028] transition-colors"
                     tabIndex={-1}
                   >
                     {showPassword ? (
@@ -223,7 +234,7 @@ export default function RegisterForm() {
 
               {/* Confirm Password */}
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Label htmlFor="confirm-password" className="text-[#3D3028] font-semibold">Confirm Password</Label>
                 <div className="relative">
                   <Input
                     id="confirm-password"
@@ -234,12 +245,12 @@ export default function RegisterForm() {
                     required
                     disabled={isLoading}
                     autoComplete="new-password"
-                    className="pr-10"
+                    className="input-playful pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8B7E74] hover:text-[#3D3028] transition-colors"
                     tabIndex={-1}
                   >
                     {showConfirmPassword ? (
@@ -253,7 +264,7 @@ export default function RegisterForm() {
 
               {/* Role Selection */}
               <div className="space-y-3">
-                <Label>Account Type</Label>
+                <Label className="text-[#3D3028] font-semibold">Account Type</Label>
                 <RadioGroup
                   value={role}
                   onValueChange={setRole}
@@ -261,32 +272,32 @@ export default function RegisterForm() {
                 >
                   <Label
                     htmlFor="role-parent"
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
+                    className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all duration-200 ${
                       role === "PARENT"
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/30"
+                        ? "border-[#6BCB77] bg-[#6BCB77]/10 shadow-[0_4px_0_#27AE60,0_6px_10px_rgba(0,0,0,0.08)] -translate-y-0.5"
+                        : "border-[#e8e0d8] hover:border-[#6BCB77]/40 bg-white"
                     }`}
                   >
-                    <RadioGroupItem value="PARENT" id="role-parent" />
+                    <RadioGroupItem value="PARENT" id="role-parent" className="text-[#6BCB77]" />
                     <div>
-                      <div className="text-sm font-medium">Parent</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-sm font-bold text-[#3D3028]">Parent 👨‍👩‍👧</div>
+                      <div className="text-xs text-[#8B7E74]">
                         Register your child
                       </div>
                     </div>
                   </Label>
                   <Label
                     htmlFor="role-admin"
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors ${
+                    className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all duration-200 ${
                       role === "ADMIN"
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/30"
+                        ? "border-[#4D96FF] bg-[#4D96FF]/10 shadow-[0_4px_0_#2980B9,0_6px_10px_rgba(0,0,0,0.08)] -translate-y-0.5"
+                        : "border-[#e8e0d8] hover:border-[#4D96FF]/40 bg-white"
                     }`}
                   >
-                    <RadioGroupItem value="ADMIN" id="role-admin" />
+                    <RadioGroupItem value="ADMIN" id="role-admin" className="text-[#4D96FF]" />
                     <div>
-                      <div className="text-sm font-medium">School Admin</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-sm font-bold text-[#3D3028]">School Admin 🏫</div>
+                      <div className="text-xs text-[#8B7E74]">
                         Manage applications
                       </div>
                     </div>
@@ -297,7 +308,7 @@ export default function RegisterForm() {
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                className="w-full btn-3d-green bg-[#6BCB77] text-white hover:bg-[#5ABF68] h-12 text-base"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -315,14 +326,14 @@ export default function RegisterForm() {
             </form>
 
             {/* Login Link */}
-            <div className="mt-6 text-center text-sm text-muted-foreground">
+            <div className="mt-6 text-center text-sm text-[#8B7E74]">
               Already have an account?{" "}
               <button
                 type="button"
                 onClick={() => setCurrentView("login")}
-                className="font-medium text-primary hover:text-primary/80 transition-colors"
+                className="font-bold text-[#FF6B6B] hover:text-[#FF8E53] transition-colors"
               >
-                Sign In
+                Sign In 🚀
               </button>
             </div>
 
@@ -331,7 +342,7 @@ export default function RegisterForm() {
               <button
                 type="button"
                 onClick={() => setCurrentView("landing")}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="text-xs text-[#8B7E74] hover:text-[#3D3028] transition-colors font-medium"
               >
                 &larr; Back to Home
               </button>

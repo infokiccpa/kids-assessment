@@ -67,6 +67,13 @@ interface TaskState {
   previewUrl: string | null;
 }
 
+const TASK_COLORS: Record<string, { border: string; numberBg: string; numberText: string; dotColor: string }> = {
+  TASK1: { border: "border-l-[#FF6B6B]", numberBg: "number-pop bg-gradient-to-br from-[#FF6B6B] to-[#FF8E53] text-white", numberText: "", dotColor: "bg-[#FF6B6B]" },
+  TASK2: { border: "border-l-[#9B59B6]", numberBg: "number-pop bg-gradient-to-br from-[#9B59B6] to-[#8E44AD] text-white", numberText: "", dotColor: "bg-[#9B59B6]" },
+  TASK3: { border: "border-l-[#6BCB77]", numberBg: "number-pop bg-gradient-to-br from-[#6BCB77] to-[#27AE60] text-white", numberText: "", dotColor: "bg-[#6BCB77]" },
+  TASK4: { border: "border-l-[#4D96FF]", numberBg: "number-pop bg-gradient-to-br from-[#4D96FF] to-[#2980B9] text-white", numberText: "", dotColor: "bg-[#4D96FF]" },
+};
+
 export default function VideoTasks() {
   const { currentStudentId, setCurrentView } = useAppStore();
   const [taskStates, setTaskStates] = useState<Record<string, TaskState>>({
@@ -219,8 +226,8 @@ export default function VideoTasks() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+      <div className="mb-6 animate-bounce-in">
+        <h1 className="text-2xl sm:text-3xl font-bold rainbow-text">
           Video Tasks
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -228,36 +235,38 @@ export default function VideoTasks() {
         </p>
       </div>
 
-      {/* Guidelines Banner */}
-      <Card className="mb-6 border-amber-200 bg-amber-50/50">
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-amber-800 flex items-center gap-2 mb-3">
-            <Lightbulb className="size-4" />
+      {/* Guidelines Banner - Playful yellow gradient with 3D feel */}
+      <Card className="mb-6 card-3d bg-playful-card-yellow border-2 border-[#FEC163]/40">
+        <CardContent className="p-5">
+          <h3 className="font-bold text-[#D4A017] flex items-center gap-2 mb-3 text-base">
+            <span className="icon-bubble icon-bubble-yellow size-7 p-1.5">
+              <Lightbulb className="size-4" />
+            </span>
             Recording Guidelines
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-amber-700">
-            <div className="flex items-center gap-2">
-              <Volume2 className="size-3.5 shrink-0" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-sm text-[#B8860B]">
+            <div className="flex items-center gap-2 bg-white/60 rounded-xl px-3 py-2">
+              <Volume2 className="size-3.5 shrink-0 text-[#F39C12]" />
               <span>Quiet room required</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Eye className="size-3.5 shrink-0" />
+            <div className="flex items-center gap-2 bg-white/60 rounded-xl px-3 py-2">
+              <Eye className="size-3.5 shrink-0 text-[#F39C12]" />
               <span>Child face must be visible</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Lightbulb className="size-3.5 shrink-0" />
+            <div className="flex items-center gap-2 bg-white/60 rounded-xl px-3 py-2">
+              <Lightbulb className="size-3.5 shrink-0 text-[#F39C12]" />
               <span>Good lighting needed</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Volume2 className="size-3.5 shrink-0" />
+            <div className="flex items-center gap-2 bg-white/60 rounded-xl px-3 py-2">
+              <Volume2 className="size-3.5 shrink-0 text-[#F39C12]" />
               <span>Parent voice should be audible</span>
             </div>
-            <div className="flex items-center gap-2">
-              <CameraOff className="size-3.5 shrink-0" />
+            <div className="flex items-center gap-2 bg-white/60 rounded-xl px-3 py-2">
+              <CameraOff className="size-3.5 shrink-0 text-[#F39C12]" />
               <span>No edited videos</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Clock className="size-3.5 shrink-0" />
+            <div className="flex items-center gap-2 bg-white/60 rounded-xl px-3 py-2">
+              <Clock className="size-3.5 shrink-0 text-[#F39C12]" />
               <span>Maximum duration: 2 minutes</span>
             </div>
           </div>
@@ -265,20 +274,20 @@ export default function VideoTasks() {
       </Card>
 
       {/* Progress */}
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-sm text-muted-foreground">
+      <div className="flex items-center justify-between mb-5">
+        <span className="text-sm text-muted-foreground font-medium">
           {uploadedCount} of {TASKS.length} tasks completed
         </span>
-        <div className="flex gap-1">
+        <div className="flex gap-2">
           {TASKS.map((task) => (
             <div
               key={task.taskType}
-              className={`size-3 rounded-full transition-colors ${
+              className={`size-4 rounded-full transition-all duration-300 step-3d ${
                 taskStates[task.taskType].status === "uploaded"
-                  ? "bg-green-500"
+                  ? TASK_COLORS[task.taskType].dotColor + " scale-110"
                   : taskStates[task.taskType].status === "uploading"
-                  ? "bg-amber-400 animate-pulse"
-                  : "bg-muted-foreground/30"
+                  ? "bg-[#FEC163] animate-pulse"
+                  : "bg-muted-foreground/20"
               }`}
             />
           ))}
@@ -286,35 +295,38 @@ export default function VideoTasks() {
       </div>
 
       {/* Task Cards */}
-      <div className="space-y-4">
-        {TASKS.map((task) => {
+      <div className="space-y-5">
+        {TASKS.map((task, idx) => {
           const state = taskStates[task.taskType];
+          const colors = TASK_COLORS[task.taskType];
           return (
             <Card
               key={task.taskType}
-              className={
+              className={`card-3d border-l-4 ${colors.border} overflow-hidden ${
                 state.status === "uploaded"
-                  ? "border-green-200 bg-green-50/30"
-                  : ""
-              }
+                  ? "bg-playful-card-green"
+                  : idx % 2 === 0
+                  ? "bg-playful-card-coral"
+                  : "bg-playful-card-purple"
+              }`}
+              style={{ animationDelay: `${idx * 0.1}s` }}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <div className="flex items-center justify-center size-7 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                  <CardTitle className="flex items-center gap-3 text-base">
+                    <span className={colors.numberBg}>
                       {task.number}
-                    </div>
+                    </span>
                     {task.title}
                   </CardTitle>
                   <Badge
-                    variant="outline"
-                    className={
+                    className={`badge-3d ${
                       state.status === "uploaded"
-                        ? "bg-green-100 text-green-700 border-green-300"
+                        ? "bg-[#6BCB77]/20 text-[#27AE60] border-[#6BCB77]/30"
                         : state.status === "uploading"
-                        ? "bg-amber-100 text-amber-700 border-amber-300"
-                        : "bg-gray-100 text-gray-600 border-gray-300"
-                    }
+                        ? "bg-[#FEC163]/20 text-[#D4A017] border-[#FEC163]/30"
+                        : "bg-gray-100 text-gray-500 border-gray-200"
+                    }`}
                   >
                     {state.status === "uploaded" && (
                       <CheckCircle2 className="size-3 mr-1" />
@@ -334,37 +346,42 @@ export default function VideoTasks() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {task.instruction}
                 </p>
 
-                {/* Upload Progress */}
+                {/* Upload Progress - Rainbow gradient */}
                 {state.status === "uploading" && (
                   <div className="space-y-2">
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-3 bg-muted/50 rounded-full overflow-hidden shadow-inner">
                       <div
-                        className="h-full bg-primary rounded-full transition-all duration-300"
-                        style={{ width: `${state.progress}%` }}
+                        className="h-full rounded-full transition-all duration-300"
+                        style={{
+                          width: `${state.progress}%`,
+                          background: "linear-gradient(90deg, #FF6B6B, #FEC163, #6BCB77, #4D96FF, #9B59B6)",
+                          backgroundSize: "200% 100%",
+                          animation: "rainbowShift 2s linear infinite",
+                        }}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground font-medium">
                       Uploading {state.fileName}... {state.progress}%
                     </p>
                   </div>
                 )}
 
-                {/* Video Preview */}
+                {/* Video Preview - Rounded corners and subtle shadow */}
                 {state.status === "uploaded" && state.previewUrl && (
-                  <div className="relative rounded-lg overflow-hidden bg-black/5">
+                  <div className="relative rounded-2xl overflow-hidden bg-black/5 shadow-lg ring-2 ring-[#6BCB77]/30">
                     <video
                       src={state.previewUrl}
-                      className="w-full max-h-48 object-contain rounded-lg"
+                      className="w-full max-h-48 object-contain rounded-2xl"
                       controls
                     >
                       <track kind="captions" />
                     </video>
                     <div className="absolute top-2 right-2">
-                      <Badge className="bg-green-600 text-white text-xs">
+                      <Badge className="badge-3d bg-[#6BCB77] text-white border-none text-xs">
                         <CheckCircle2 className="size-3 mr-1" />
                         Done
                       </Badge>
@@ -388,7 +405,11 @@ export default function VideoTasks() {
                     <Button
                       variant={state.status === "uploaded" ? "outline" : "default"}
                       size="sm"
-                      className="gap-1.5"
+                      className={`gap-1.5 rounded-xl font-semibold ${
+                        state.status === "uploaded"
+                          ? "border-[#9B59B6]/30 text-[#8E44AD] hover:bg-[#9B59B6]/10"
+                          : "btn-3d bg-[#FF6B6B] hover:bg-[#FF5252] text-white border-none"
+                      }`}
                       onClick={() =>
                         fileInputRefs.current[task.taskType]?.click()
                       }
@@ -415,13 +436,13 @@ export default function VideoTasks() {
 
       {/* Error Message */}
       {error && (
-        <div className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive flex items-center gap-2">
+        <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-600 flex items-center gap-2 border-2 border-red-200 shadow-md">
           <AlertCircle className="size-4 shrink-0" />
           {error}
           <Button
             variant="ghost"
             size="sm"
-            className="ml-auto p-0 h-auto"
+            className="ml-auto p-0 h-auto text-red-400 hover:text-red-600"
             onClick={() => setError(null)}
           >
             <X className="size-3.5" />
@@ -430,11 +451,11 @@ export default function VideoTasks() {
       )}
 
       {/* Navigation Buttons */}
-      <div className="flex justify-between mt-6">
+      <div className="flex justify-between mt-8">
         <Button
           variant="outline"
           onClick={() => setCurrentView("parent-questionnaire")}
-          className="gap-1.5"
+          className="gap-1.5 rounded-xl font-semibold border-[#9B59B6]/30 text-[#8E44AD] hover:bg-[#9B59B6]/10"
         >
           <ChevronLeft className="size-4" />
           Back to Questionnaire
@@ -443,7 +464,7 @@ export default function VideoTasks() {
         {allUploaded && (
           <Button
             onClick={handleSubmit}
-            className="gap-1.5 bg-green-600 hover:bg-green-700"
+            className="gap-1.5 btn-3d-green bg-[#6BCB77] hover:bg-[#5AB868] text-white border-none"
           >
             Submit for Analysis
             <CheckCircle2 className="size-4" />

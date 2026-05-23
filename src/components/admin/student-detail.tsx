@@ -304,21 +304,28 @@ export default function StudentDetail() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="size-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center min-h-screen bg-playful-warm">
+        <div className="flex flex-col items-center gap-3">
+          <div className="icon-bubble icon-bubble-coral h-16 w-16 animate-sparkle">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+          <p className="text-muted-foreground font-medium">Loading student details...</p>
+        </div>
       </div>
     );
   }
 
   if (error && !student) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="max-w-md w-full">
+      <div className="flex items-center justify-center min-h-screen bg-playful-warm">
+        <Card className="max-w-md w-full card-3d">
           <CardContent className="p-6 text-center">
+            <div className="icon-bubble icon-bubble-coral h-14 w-14 mx-auto mb-4">
+              <AlertTriangle className="h-7 w-7" />
+            </div>
             <p className="text-destructive font-medium">{error}</p>
             <Button
-              variant="outline"
-              className="mt-4"
+              className="mt-4 btn-3d bg-[#FF6B6B] hover:bg-[#ff5252] text-white"
               onClick={() => setCurrentView("admin-dashboard")}
             >
               Back to Dashboard
@@ -331,13 +338,15 @@ export default function StudentDetail() {
 
   if (!student) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="max-w-md w-full">
+      <div className="flex items-center justify-center min-h-screen bg-playful-warm">
+        <Card className="max-w-md w-full card-3d">
           <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground">Student not found</p>
+            <div className="icon-bubble icon-bubble-purple h-14 w-14 mx-auto mb-4 opacity-60">
+              <User className="h-7 w-7" />
+            </div>
+            <p className="text-muted-foreground font-medium">Student not found</p>
             <Button
-              variant="outline"
-              className="mt-4"
+              className="mt-4 btn-3d bg-[#FF6B6B] hover:bg-[#ff5252] text-white"
               onClick={() => setCurrentView("admin-dashboard")}
             >
               Back to Dashboard
@@ -361,39 +370,39 @@ export default function StudentDetail() {
       icon: CheckCircle2,
       variant: "default" as const,
       className:
-        "bg-green-600 hover:bg-green-700 text-white",
+        "btn-3d-green bg-green-500 hover:bg-green-600 text-white border-0",
     },
     {
       action: "HOLD",
       label: "Hold",
       icon: Pause,
       variant: "outline" as const,
-      className: "border-amber-500 text-amber-700 hover:bg-amber-50",
+      className: "btn-3d bg-amber-400 hover:bg-amber-500 text-white border-0",
     },
     {
       action: "REASSESS",
       label: "Reassess",
       icon: RotateCcw,
       variant: "outline" as const,
-      className: "border-purple-500 text-purple-700 hover:bg-purple-50",
+      className: "btn-3d-purple bg-purple-500 hover:bg-purple-600 text-white border-0",
     },
     {
       action: "REJECT",
       label: "Reject",
       icon: XCircle,
       variant: "outline" as const,
-      className: "border-red-500 text-red-700 hover:bg-red-50",
+      className: "btn-3d bg-red-500 hover:bg-red-600 text-white border-0",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-playful-warm">
       {/* Top Bar */}
-      <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 sm:px-6">
+      <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-purple-100/40 bg-white/80 backdrop-blur-md px-4 sm:px-6">
         <Button
           variant="ghost"
           size="sm"
-          className="gap-2"
+          className="gap-2 rounded-2xl hover:bg-purple-50 text-purple-600 font-semibold"
           onClick={() => setCurrentView("admin-dashboard")}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -401,22 +410,22 @@ export default function StudentDetail() {
         </Button>
         <div className="flex-1" />
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="font-mono text-xs">
+          <Badge variant="outline" className="font-mono text-xs badge-3d bg-purple-50 text-purple-700 border-purple-200">
             {student.applicationId}
           </Badge>
           <Badge
             variant="outline"
-            className={
+            className={`badge-3d text-xs font-bold ${
               student.status === "ACCEPTED"
-                ? "bg-green-50 text-green-700 border-green-300"
+                ? "bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border-green-300"
                 : student.status === "REJECTED"
-                  ? "bg-red-50 text-red-700 border-red-300"
+                  ? "bg-gradient-to-r from-red-100 to-rose-100 text-red-700 border-red-300"
                   : student.status === "UNDER_REVIEW"
-                    ? "bg-purple-50 text-purple-700 border-purple-300"
+                    ? "bg-gradient-to-r from-purple-100 to-violet-100 text-purple-700 border-purple-300"
                     : student.status === "HOLD"
-                      ? "bg-yellow-50 text-yellow-700 border-yellow-300"
-                      : "bg-gray-50 text-gray-700 border-gray-300"
-            }
+                      ? "bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-700 border-yellow-300"
+                      : "bg-gradient-to-r from-gray-50 to-slate-100 text-gray-700 border-gray-300"
+            }`}
           >
             {student.status.replace(/_/g, " ")}
           </Badge>
@@ -424,9 +433,9 @@ export default function StudentDetail() {
       </header>
 
       {/* Content */}
-      <main className="max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
+      <main className="max-w-5xl mx-auto p-4 sm:p-6 space-y-6 custom-scrollbar">
         {error && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="rounded-2xl border-2 border-red-200 shadow-lg">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
@@ -434,50 +443,52 @@ export default function StudentDetail() {
         )}
 
         {/* 1. Student Profile Card */}
-        <Card>
+        <Card className="card-3d">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-primary" />
-              Student Profile
+              <div className="icon-bubble icon-bubble-coral h-9 w-9">
+                <User className="h-5 w-5" />
+              </div>
+              <span className="font-extrabold text-lg">Student Profile</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Child Info */}
               <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                  Child Information
+                <h4 className="text-sm font-extrabold text-[#FF6B6B] uppercase tracking-wider flex items-center gap-2">
+                  👶 Child Information
                 </h4>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                   <div>
                     <span className="text-muted-foreground">Name</span>
-                    <p className="font-medium">{student.childName}</p>
+                    <p className="font-semibold">{student.childName}</p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Date of Birth</span>
-                    <p className="font-medium">
+                    <p className="font-semibold">
                       {new Date(student.dateOfBirth).toLocaleDateString()}
                     </p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Age</span>
-                    <p className="font-medium">
+                    <p className="font-semibold">
                       {calculateAge(student.dateOfBirth)}
                     </p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Gender</span>
-                    <p className="font-medium">{student.gender}</p>
+                    <p className="font-semibold">{student.gender}</p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Nationality</span>
-                    <p className="font-medium">
+                    <p className="font-semibold">
                       {student.nationality || "N/A"}
                     </p>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Languages</span>
-                    <p className="font-medium">
+                    <p className="font-semibold">
                       {student.languagesSpoken || "N/A"}
                     </p>
                   </div>
@@ -486,38 +497,48 @@ export default function StudentDetail() {
 
               {/* Parent Info */}
               <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                  Parent Information
+                <h4 className="text-sm font-extrabold text-purple-600 uppercase tracking-wider flex items-center gap-2">
+                  👨‍👩‍👧 Parent Information
                 </h4>
-                <div className="space-y-2 text-sm">
+                <div className="space-y-2.5 text-sm">
                   <div className="flex items-center gap-2">
-                    <User className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div className="icon-bubble icon-bubble-purple h-6 w-6 text-[10px]">
+                      <User className="h-3 w-3" />
+                    </div>
                     <span className="text-muted-foreground">Father:</span>
-                    <span className="font-medium">{student.fatherName || "N/A"}</span>
+                    <span className="font-semibold">{student.fatherName || "N/A"}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <User className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div className="icon-bubble icon-bubble-pink h-6 w-6 text-[10px]">
+                      <User className="h-3 w-3" />
+                    </div>
                     <span className="text-muted-foreground">Mother:</span>
-                    <span className="font-medium">{student.motherName || "N/A"}</span>
+                    <span className="font-semibold">{student.motherName || "N/A"}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div className="icon-bubble icon-bubble-blue h-6 w-6 text-[10px]">
+                      <Phone className="h-3 w-3" />
+                    </div>
                     <span className="text-muted-foreground">Phone:</span>
-                    <span className="font-medium">
+                    <span className="font-semibold">
                       {student.mobileNumber || "N/A"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div className="icon-bubble icon-bubble-coral h-6 w-6 text-[10px]">
+                      <Mail className="h-3 w-3" />
+                    </div>
                     <span className="text-muted-foreground">Email:</span>
-                    <span className="font-medium">
+                    <span className="font-semibold">
                       {student.parentEmail || "N/A"}
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+                    <div className="icon-bubble icon-bubble-green h-6 w-6 text-[10px] mt-0.5">
+                      <MapPin className="h-3 w-3" />
+                    </div>
                     <span className="text-muted-foreground">Address:</span>
-                    <span className="font-medium">
+                    <span className="font-semibold">
                       {student.address || "N/A"}
                     </span>
                   </div>
@@ -525,39 +546,50 @@ export default function StudentDetail() {
               </div>
             </div>
 
-            <Separator className="my-4" />
+            <div className="divider-rainbow my-4" />
 
             {/* School & Application Info */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
               <div className="flex items-center gap-2">
-                <School className="h-4 w-4 text-primary" />
+                <div className="icon-bubble icon-bubble-yellow h-8 w-8">
+                  <School className="h-4 w-4" />
+                </div>
                 <div>
-                  <span className="text-muted-foreground block">School</span>
-                  <p className="font-medium">
+                  <span className="text-muted-foreground block text-xs">School</span>
+                  <p className="font-semibold">
                     {student.schoolApplied || "N/A"}
                   </p>
                 </div>
               </div>
-              <div>
-                <span className="text-muted-foreground block">Grade</span>
-                <p className="font-medium">{student.gradeApplied || "N/A"}</p>
+              <div className="flex items-center gap-2">
+                <div className="icon-bubble icon-bubble-purple h-8 w-8">
+                  <FileText className="h-4 w-4" />
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs">Grade</span>
+                  <p className="font-semibold">{student.gradeApplied || "N/A"}</p>
+                </div>
               </div>
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" />
+                <div className="icon-bubble icon-bubble-blue h-8 w-8">
+                  <FileText className="h-4 w-4" />
+                </div>
                 <div>
-                  <span className="text-muted-foreground block">
+                  <span className="text-muted-foreground block text-xs">
                     Application ID
                   </span>
-                  <p className="font-medium font-mono text-xs">
+                  <p className="font-semibold font-mono text-xs">
                     {student.applicationId}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
+                <div className="icon-bubble icon-bubble-green h-8 w-8">
+                  <Calendar className="h-4 w-4" />
+                </div>
                 <div>
-                  <span className="text-muted-foreground block">Applied</span>
-                  <p className="font-medium">
+                  <span className="text-muted-foreground block text-xs">Applied</span>
+                  <p className="font-semibold">
                     {new Date(student.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -568,24 +600,35 @@ export default function StudentDetail() {
 
         {/* 2. Questionnaire Summary */}
         {student.questionnaire && (
-          <Card>
+          <Card className="card-3d">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                Questionnaire Summary
+                <div className="icon-bubble icon-bubble-yellow h-9 w-9">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <span className="font-extrabold text-lg">Questionnaire Summary</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="sectionA">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="sectionA">
-                    Section A - Attention
+                <TabsList className="mb-4 bg-purple-50/60 p-1 rounded-2xl">
+                  <TabsTrigger
+                    value="sectionA"
+                    className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-400 data-[state=active]:to-amber-500 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:shadow-md data-[state=active]:shadow-amber-200"
+                  >
+                    🎯 Section A - Attention
                   </TabsTrigger>
-                  <TabsTrigger value="sectionB">
-                    Section B - Emotional
+                  <TabsTrigger
+                    value="sectionB"
+                    className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-400 data-[state=active]:to-rose-500 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:shadow-md data-[state=active]:shadow-rose-200"
+                  >
+                    💖 Section B - Emotional
                   </TabsTrigger>
-                  <TabsTrigger value="sectionC">
-                    Section C - Social
+                  <TabsTrigger
+                    value="sectionC"
+                    className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-400 data-[state=active]:to-green-500 data-[state=active]:text-white data-[state=active]:font-bold data-[state=active]:shadow-md data-[state=active]:shadow-green-200"
+                  >
+                    🤝 Section C - Social
                   </TabsTrigger>
                 </TabsList>
 
@@ -616,12 +659,12 @@ export default function StudentDetail() {
                         return (
                           <div
                             key={qKey}
-                            className="flex items-center justify-between p-3 rounded-lg border"
+                            className="flex items-center justify-between p-3 rounded-2xl border-2 border-purple-50 bg-white shadow-sm hover:shadow-md transition-shadow"
                           >
-                            <span className="text-sm mr-3">{question}</span>
+                            <span className="text-sm mr-3 font-medium">{question}</span>
                             <Badge
                               variant="outline"
-                              className={`shrink-0 ${getAnswerColor(answer)}`}
+                              className={`shrink-0 badge-3d text-xs ${getAnswerColor(answer)}`}
                             >
                               {answer}
                             </Badge>
@@ -637,35 +680,43 @@ export default function StudentDetail() {
         )}
 
         {/* 3. Video Submissions */}
-        <Card>
+        <Card className="card-3d">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
-              <Video className="h-5 w-5 text-primary" />
-              Video Submissions
+              <div className="icon-bubble icon-bubble-blue h-9 w-9">
+                <Video className="h-5 w-5" />
+              </div>
+              <span className="font-extrabold text-lg">Video Submissions</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {(["TASK1", "TASK2", "TASK3", "TASK4"] as const).map((taskType) => {
+              {(["TASK1", "TASK2", "TASK3", "TASK4"] as const).map((taskType, idx) => {
                 const video = student.videos.find(
                   (v) => v.taskType === taskType
                 );
+                const borderColors = [
+                  "border-2 border-[#FF6B6B]/30",
+                  "border-2 border-purple-300/40",
+                  "border-2 border-green-300/40",
+                  "border-2 border-amber-300/40",
+                ];
                 return (
-                  <Card key={taskType} className="border-dashed">
+                  <Card key={taskType} className={`card-3d ${borderColors[idx]} overflow-hidden`}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-medium text-sm">
+                        <h4 className="font-bold text-sm">
                           {taskLabels[taskType]}
                         </h4>
                         <Badge
                           variant="outline"
-                          className={
+                          className={`badge-3d text-xs ${
                             video
-                              ? "bg-green-50 text-green-700 border-green-300"
+                              ? "bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border-green-300"
                               : "bg-gray-50 text-gray-500 border-gray-300"
-                          }
+                          }`}
                         >
-                          {video ? "Uploaded" : "Not uploaded"}
+                          {video ? "✅ Uploaded" : "⏳ Not uploaded"}
                         </Badge>
                       </div>
                       {video ? (
@@ -673,7 +724,7 @@ export default function StudentDetail() {
                           <video
                             src={video.filePath}
                             controls
-                            className="w-full rounded-md bg-black mb-2"
+                            className="w-full rounded-xl bg-black mb-2 shadow-inner"
                             style={{ maxHeight: "160px" }}
                           >
                             Your browser does not support the video element.
@@ -687,8 +738,10 @@ export default function StudentDetail() {
                         </>
                       ) : (
                         <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
-                          <Video className="h-8 w-8 mb-2 opacity-40" />
-                          <p className="text-xs">Not uploaded</p>
+                          <div className="icon-bubble icon-bubble-purple h-12 w-12 mb-2 opacity-40">
+                            <Video className="h-6 w-6" />
+                          </div>
+                          <p className="text-xs font-medium">Not uploaded</p>
                         </div>
                       )}
                     </CardContent>
@@ -701,20 +754,22 @@ export default function StudentDetail() {
 
         {/* 4. AI Analysis Results */}
         {analysis && (
-          <Card>
+          <Card className="card-3d">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-primary" />
-                AI Analysis Results
+                <div className="icon-bubble icon-bubble-purple h-9 w-9">
+                  <Brain className="h-5 w-5" />
+                </div>
+                <span className="font-extrabold text-lg">AI Analysis Results</span>
                 <Badge
                   variant="outline"
-                  className={
+                  className={`badge-3d text-xs font-bold ${
                     analysis.analysisStatus === "COMPLETED"
-                      ? "bg-green-50 text-green-700 border-green-300"
+                      ? "bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border-green-300"
                       : analysis.analysisStatus === "PROCESSING"
-                        ? "bg-amber-50 text-amber-700 border-amber-300"
-                        : "bg-red-50 text-red-700 border-red-300"
-                  }
+                        ? "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border-amber-300"
+                        : "bg-gradient-to-r from-red-100 to-rose-100 text-red-700 border-red-300"
+                  }`}
                 >
                   {analysis.analysisStatus}
                 </Badge>
@@ -722,33 +777,35 @@ export default function StudentDetail() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Readiness Score */}
-              <div className="flex flex-col items-center py-4">
-                <span className="text-sm text-muted-foreground mb-1">
-                  Overall Readiness Score
+              <div className="flex flex-col items-center py-6 bg-gradient-to-br from-purple-50/50 via-pink-50/50 to-amber-50/50 rounded-2xl">
+                <span className="text-sm text-muted-foreground mb-1 font-semibold">
+                  🏆 Overall Readiness Score
                 </span>
                 <span
-                  className={`text-5xl font-bold ${getReadinessColor(analysis.readinessScore)}`}
+                  className={`text-6xl font-extrabold ${getReadinessColor(analysis.readinessScore)} drop-shadow-sm`}
                 >
                   {Math.round(analysis.readinessScore)}
                 </span>
-                <span className="text-sm text-muted-foreground">out of 100</span>
+                <span className="text-sm text-muted-foreground font-medium">out of 100</span>
                 <Badge
-                  className={`mt-2 ${getScoreBadgeColor(analysis.readinessScore)}`}
+                  className={`mt-3 badge-3d text-xs font-bold ${getScoreBadgeColor(analysis.readinessScore)}`}
                 >
                   {analysis.readinessScore >= 80
-                    ? "Ready"
+                    ? "✅ Ready"
                     : analysis.readinessScore >= 60
-                      ? "Needs Observation"
-                      : "Needs Support"}
+                      ? "👀 Needs Observation"
+                      : "🤝 Needs Support"}
                 </Badge>
               </div>
 
-              <Separator />
+              <div className="divider-rainbow" />
 
               {/* Video Analysis Scores */}
               <div>
-                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Video className="h-4 w-4 text-primary" />
+                <h4 className="text-sm font-extrabold mb-3 flex items-center gap-2 text-purple-700">
+                  <div className="icon-bubble icon-bubble-blue h-7 w-7">
+                    <Video className="h-3.5 w-3.5" />
+                  </div>
                   Video Analysis Scores
                 </h4>
                 <div className="space-y-3">
@@ -768,28 +825,40 @@ export default function StudentDetail() {
                       score: analysis.instructionScore,
                     },
                   ].map((item) => (
-                    <div key={item.label} className="space-y-1">
+                    <div key={item.label} className="space-y-1.5">
                       <div className="flex items-center justify-between text-sm">
-                        <span>{item.label}</span>
-                        <span className="font-medium">
+                        <span className="font-medium">{item.label}</span>
+                        <span className={`font-bold badge-3d text-xs ${
+                          item.score >= 7 ? "bg-green-100 text-green-700" :
+                          item.score >= 4 ? "bg-amber-100 text-amber-700" :
+                          "bg-red-100 text-red-700"
+                        }`}>
                           {item.score.toFixed(1)}/10
                         </span>
                       </div>
-                      <Progress
-                        value={item.score * 10}
-                        className={`h-2 ${getProgressColor(item.score)}`}
-                      />
+                      <div className="h-3 rounded-full bg-purple-50 overflow-hidden shadow-inner">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            item.score >= 7 ? "bg-gradient-to-r from-green-400 to-green-500" :
+                            item.score >= 4 ? "bg-gradient-to-r from-amber-400 to-amber-500" :
+                            "bg-gradient-to-r from-red-400 to-red-500"
+                          }`}
+                          style={{ width: `${item.score * 10}%` }}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <Separator />
+              <div className="divider-rainbow" />
 
               {/* Speech Analysis Scores */}
               <div>
-                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-primary" />
+                <h4 className="text-sm font-extrabold mb-3 flex items-center gap-2 text-[#FF6B6B]">
+                  <div className="icon-bubble icon-bubble-coral h-7 w-7">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                  </div>
                   Speech Analysis Scores
                 </h4>
                 <div className="space-y-3">
@@ -807,93 +876,107 @@ export default function StudentDetail() {
                       score: analysis.responseConfidence,
                     },
                   ].map((item) => (
-                    <div key={item.label} className="space-y-1">
+                    <div key={item.label} className="space-y-1.5">
                       <div className="flex items-center justify-between text-sm">
-                        <span>{item.label}</span>
-                        <span className="font-medium">
+                        <span className="font-medium">{item.label}</span>
+                        <span className={`font-bold badge-3d text-xs ${
+                          item.score >= 7 ? "bg-green-100 text-green-700" :
+                          item.score >= 4 ? "bg-amber-100 text-amber-700" :
+                          "bg-red-100 text-red-700"
+                        }`}>
                           {item.score.toFixed(1)}/10
                         </span>
                       </div>
-                      <Progress
-                        value={item.score * 10}
-                        className={`h-2 ${getProgressColor(item.score)}`}
-                      />
+                      <div className="h-3 rounded-full bg-rose-50 overflow-hidden shadow-inner">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            item.score >= 7 ? "bg-gradient-to-r from-green-400 to-green-500" :
+                            item.score >= 4 ? "bg-gradient-to-r from-amber-400 to-amber-500" :
+                            "bg-gradient-to-r from-red-400 to-red-500"
+                          }`}
+                          style={{ width: `${item.score * 10}%` }}
+                        />
+                      </div>
                     </div>
                   ))}
                   <div className="flex items-center justify-between text-sm">
-                    <span>Response Delay</span>
-                    <span className="font-medium">
+                    <span className="font-medium">Response Delay</span>
+                    <span className="font-bold badge-3d text-xs bg-blue-100 text-blue-700">
                       {analysis.responseDelay.toFixed(1)}s
                     </span>
                   </div>
                 </div>
               </div>
 
-              <Separator />
+              <div className="divider-rainbow" />
 
               {/* Behavioral Assessment */}
               <div>
-                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-primary" />
+                <h4 className="text-sm font-extrabold mb-3 flex items-center gap-2 text-amber-600">
+                  <div className="icon-bubble icon-bubble-yellow h-7 w-7">
+                    <Shield className="h-3.5 w-3.5" />
+                  </div>
                   Behavioral Assessment
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg border">
-                    <span className="text-sm">Attention Level</span>
+                  <div className="flex items-center justify-between p-3 rounded-2xl border-2 border-amber-100 bg-amber-50/30">
+                    <span className="text-sm font-medium">Attention Level</span>
                     <Badge
                       variant="outline"
-                      className={getBehavioralBadge(analysis.attentionLevel)}
+                      className={`badge-3d text-xs ${getBehavioralBadge(analysis.attentionLevel)}`}
                     >
                       {analysis.attentionLevel || "N/A"}
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg border">
-                    <span className="text-sm">Instruction Following</span>
+                  <div className="flex items-center justify-between p-3 rounded-2xl border-2 border-purple-100 bg-purple-50/30">
+                    <span className="text-sm font-medium">Instruction Following</span>
                     <Badge
                       variant="outline"
-                      className={getBehavioralBadge(
+                      className={`badge-3d text-xs ${getBehavioralBadge(
                         analysis.instructionFollowing
-                      )}
+                      )}`}
                     >
                       {analysis.instructionFollowing || "N/A"}
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg border">
-                    <span className="text-sm">Social Readiness</span>
+                  <div className="flex items-center justify-between p-3 rounded-2xl border-2 border-green-100 bg-green-50/30">
+                    <span className="text-sm font-medium">Social Readiness</span>
                     <Badge
                       variant="outline"
-                      className={getBehavioralBadge(analysis.socialReadiness)}
+                      className={`badge-3d text-xs ${getBehavioralBadge(analysis.socialReadiness)}`}
                     >
                       {analysis.socialReadiness || "N/A"}
                     </Badge>
                   </div>
-                  <div className="p-3 rounded-lg border">
-                    <span className="text-sm text-muted-foreground block mb-1">
+                  <div className="p-3 rounded-2xl border-2 border-rose-100 bg-rose-50/30">
+                    <span className="text-sm text-muted-foreground block mb-1 font-medium">
                       Emotional Behavior
                     </span>
-                    <p className="text-sm font-medium">
+                    <p className="text-sm font-semibold">
                       {analysis.emotionalBehavior || "N/A"}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-3 p-3 rounded-lg border">
-                  <span className="text-sm text-muted-foreground block mb-1">
+                <div className="mt-3 p-3 rounded-2xl border-2 border-blue-100 bg-blue-50/30">
+                  <span className="text-sm text-muted-foreground block mb-1 font-medium">
                     Classroom Adaptability
                   </span>
-                  <p className="text-sm font-medium">
+                  <p className="text-sm font-semibold">
                     {analysis.classroomAdaptability || "N/A"}
                   </p>
                 </div>
 
                 {/* Teacher Recommendation */}
-                <Card className="mt-3 border-primary/30 bg-primary/5">
+                <Card className="mt-3 card-3d bg-gradient-to-br from-[#FF6B6B]/5 to-purple-50/50 border-[#FF6B6B]/20">
                   <CardContent className="p-4">
-                    <h5 className="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
-                      <School className="h-4 w-4" />
+                    <h5 className="text-sm font-extrabold text-[#FF6B6B] mb-2 flex items-center gap-2">
+                      <div className="icon-bubble icon-bubble-coral h-7 w-7">
+                        <School className="h-3.5 w-3.5" />
+                      </div>
                       Teacher Recommendation
                     </h5>
-                    <p className="text-sm leading-relaxed">
+                    <p className="text-sm leading-relaxed font-medium">
                       {analysis.teacherRecommendation ||
                         "No specific recommendations."}
                     </p>
@@ -904,9 +987,9 @@ export default function StudentDetail() {
                 {riskFlags.length > 0 && (
                   <div className="mt-3 space-y-2">
                     {riskFlags.map((flag, idx) => (
-                      <Alert key={idx} variant="destructive">
+                      <Alert key={idx} variant="destructive" className="rounded-2xl border-2 border-red-200">
                         <AlertTriangle className="h-4 w-4" />
-                        <AlertTitle>Risk Flag</AlertTitle>
+                        <AlertTitle className="font-bold">⚠️ Risk Flag</AlertTitle>
                         <AlertDescription>{flag}</AlertDescription>
                       </Alert>
                     ))}
@@ -918,11 +1001,13 @@ export default function StudentDetail() {
         )}
 
         {/* 5. Admin Actions */}
-        <Card>
+        <Card className="card-3d">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" />
-              Admin Actions
+              <div className="icon-bubble icon-bubble-green h-9 w-9">
+                <Shield className="h-5 w-5" />
+              </div>
+              <span className="font-extrabold text-lg">Admin Actions</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -949,37 +1034,43 @@ export default function StudentDetail() {
 
         {/* 6. Admin Notes History */}
         {student.adminNotes.length > 0 && (
-          <Card>
+          <Card className="card-3d">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                Admin Notes History
+                <div className="icon-bubble icon-bubble-yellow h-9 w-9">
+                  <Clock className="h-5 w-5" />
+                </div>
+                <span className="font-extrabold text-lg">Admin Notes History</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+              <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
                 {student.adminNotes.map((note) => (
                   <div
                     key={note.id}
-                    className="flex gap-3 p-3 rounded-lg border"
+                    className="flex gap-3 p-4 rounded-2xl border-2 border-purple-50 bg-white shadow-sm hover:shadow-md transition-shadow"
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <Badge
                           variant="outline"
-                          className={
+                          className={`badge-3d text-xs font-bold ${
                             note.action === "ACCEPT"
-                              ? "bg-green-50 text-green-700 border-green-300"
+                              ? "bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border-green-300"
                               : note.action === "REJECT"
-                                ? "bg-red-50 text-red-700 border-red-300"
+                                ? "bg-gradient-to-r from-red-100 to-rose-100 text-red-700 border-red-300"
                                 : note.action === "HOLD"
-                                  ? "bg-yellow-50 text-yellow-700 border-yellow-300"
-                                  : "bg-purple-50 text-purple-700 border-purple-300"
-                          }
+                                  ? "bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-700 border-yellow-300"
+                                  : "bg-gradient-to-r from-purple-100 to-violet-100 text-purple-700 border-purple-300"
+                          }`}
                         >
+                          {note.action === "ACCEPT" && "✅ "}
+                          {note.action === "REJECT" && "❌ "}
+                          {note.action === "HOLD" && "⏸️ "}
+                          {note.action === "REASSESS" && "🔄 "}
                           {note.action}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground font-medium">
                           by {note.admin.name}
                         </span>
                         <span className="text-xs text-muted-foreground ml-auto">
@@ -987,7 +1078,7 @@ export default function StudentDetail() {
                         </span>
                       </div>
                       {note.note && (
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-sm text-muted-foreground mt-1 font-medium">
                           {note.note}
                         </p>
                       )}
@@ -1002,8 +1093,7 @@ export default function StudentDetail() {
         {/* 7. Download Report */}
         <div className="flex justify-end">
           <Button
-            variant="outline"
-            className="gap-2"
+            className="gap-2 btn-3d bg-[#FF6B6B] hover:bg-[#ff5252] text-white font-bold"
             onClick={handleDownloadReport}
             disabled={downloading}
           >
@@ -1012,7 +1102,7 @@ export default function StudentDetail() {
             ) : (
               <Download className="h-4 w-4" />
             )}
-            Download Report
+            📥 Download Report
           </Button>
         </div>
 
@@ -1022,15 +1112,15 @@ export default function StudentDetail() {
 
       {/* Action Dialog */}
       <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl border-2 border-purple-100 shadow-2xl">
           <DialogHeader>
-            <DialogTitle>
-              {actionType === "ACCEPT" && "Accept Application"}
-              {actionType === "HOLD" && "Place on Hold"}
-              {actionType === "REASSESS" && "Request Reassessment"}
-              {actionType === "REJECT" && "Reject Application"}
+            <DialogTitle className="font-extrabold text-lg">
+              {actionType === "ACCEPT" && "✅ Accept Application"}
+              {actionType === "HOLD" && "⏸️ Place on Hold"}
+              {actionType === "REASSESS" && "🔄 Request Reassessment"}
+              {actionType === "REJECT" && "❌ Reject Application"}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-muted-foreground">
               {actionType === "ACCEPT" &&
                 "Accept this application. The parent will be notified."}
               {actionType === "HOLD" &&
@@ -1042,7 +1132,7 @@ export default function StudentDetail() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-2">
-            <label className="text-sm font-medium mb-2 block">
+            <label className="text-sm font-bold mb-2 block text-foreground">
               Note (optional)
             </label>
             <Textarea
@@ -1050,11 +1140,13 @@ export default function StudentDetail() {
               value={actionNote}
               onChange={(e) => setActionNote(e.target.value)}
               rows={4}
+              className="input-playful resize-none"
             />
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button
               variant="outline"
+              className="rounded-xl font-semibold"
               onClick={() => setActionDialogOpen(false)}
             >
               Cancel
@@ -1062,13 +1154,15 @@ export default function StudentDetail() {
             <Button
               onClick={handleAction}
               disabled={submitting}
-              className={
+              className={`font-bold rounded-xl ${
                 actionType === "ACCEPT"
-                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  ? "btn-3d-green bg-green-500 hover:bg-green-600 text-white border-0"
                   : actionType === "REJECT"
-                    ? "bg-red-600 hover:bg-red-700 text-white"
-                    : undefined
-              }
+                    ? "btn-3d bg-red-500 hover:bg-red-600 text-white border-0"
+                    : actionType === "HOLD"
+                      ? "btn-3d bg-amber-400 hover:bg-amber-500 text-white border-0"
+                      : "btn-3d-purple bg-purple-500 hover:bg-purple-600 text-white border-0"
+              }`}
             >
               {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Confirm {actionType.charAt(0) + actionType.slice(1).toLowerCase()}

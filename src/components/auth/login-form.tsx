@@ -71,54 +71,62 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-8">
-      {/* Decorative background */}
+    <div className="min-h-screen flex flex-col items-center justify-center bg-playful-warm px-4 py-8 relative overflow-hidden">
+      {/* Floating decorative bubbles */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-accent/10 blur-3xl" />
+        <div className="bubble w-72 h-72 bg-[#FF6B6B] top-[-5rem] right-[-3rem]" />
+        <div className="bubble w-56 h-56 bg-[#FEC163] bottom-[-2rem] left-[-2rem]" />
+        <div className="bubble w-40 h-40 bg-[#6BCB77] top-[15%] left-[5%]" />
+        <div className="bubble w-32 h-32 bg-[#4D96FF] top-[60%] right-[8%]" />
+        <div className="bubble w-24 h-24 bg-[#9B59B6] top-[35%] right-[15%]" />
+        <div className="bubble w-20 h-20 bg-[#FF8E53] bottom-[20%] left-[12%]" />
+        {/* Soft blurred glows */}
+        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[#FF6B6B]/10 blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 w-80 h-80 rounded-full bg-[#FEC163]/10 blur-3xl" />
+        <div className="absolute top-1/3 left-1/4 w-64 h-64 rounded-full bg-[#6BCB77]/8 blur-3xl" />
       </div>
 
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md animate-bounce-in">
         {/* Logo / Brand */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <LogIn className="h-6 w-6" />
+          <div className="mx-auto mb-4 icon-bubble icon-bubble-coral h-16 w-16 rounded-2xl animate-wiggle">
+            <LogIn className="h-8 w-8" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-3xl font-extrabold tracking-tight rainbow-text">
             Welcome Back
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Sign in to your KinderAssess account
+          <p className="mt-2 text-sm text-[#8B7E74] font-medium">
+            Sign in to your KinderAssess account 🎒
           </p>
         </div>
 
-        <Card className="border-border/50">
+        <Card className="card-3d rounded-2xl border-0 bg-white/90 backdrop-blur-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl">Sign In</CardTitle>
-            <CardDescription>
-              Enter your credentials to access the platform
+            <CardTitle className="text-xl font-bold text-[#3D3028]">Sign In</CardTitle>
+            <CardDescription className="text-[#8B7E74]">
+              Enter your credentials to access the platform ✨
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Error Alert */}
               {error && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="rounded-xl border-2 border-red-200 bg-red-50/80">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
               {/* Demo hint */}
-              <Alert className="border-primary/20 bg-primary/5">
-                <Info className="h-4 w-4 text-primary" />
-                <AlertDescription className="text-xs text-muted-foreground">
-                  <strong className="text-foreground">Demo:</strong> Use{" "}
-                  <code className="rounded bg-muted px-1 py-0.5 text-xs font-mono">
+              <Alert className="border-2 border-amber-200 bg-amber-50/80 rounded-xl">
+                <Info className="h-4 w-4 text-amber-500" />
+                <AlertDescription className="text-xs text-[#8B7E74]">
+                  <strong className="text-[#3D3028]">Demo:</strong> Use{" "}
+                  <code className="rounded-lg bg-amber-100 px-1.5 py-0.5 text-xs font-mono text-amber-700 border border-amber-200">
                     admin@school.com
                   </code>{" "}
                   /{" "}
-                  <code className="rounded bg-muted px-1 py-0.5 text-xs font-mono">
+                  <code className="rounded-lg bg-amber-100 px-1.5 py-0.5 text-xs font-mono text-amber-700 border border-amber-200">
                     admin123
                   </code>{" "}
                   to sign in as admin.
@@ -127,7 +135,7 @@ export default function LoginForm() {
 
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-[#3D3028] font-semibold">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -137,17 +145,18 @@ export default function LoginForm() {
                   required
                   disabled={isLoading}
                   autoComplete="email"
+                  className="input-playful"
                 />
               </div>
 
               {/* Password */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-[#3D3028] font-semibold">Password</Label>
                   <button
                     type="button"
                     onClick={() => setCurrentView("forgot-password")}
-                    className="text-xs text-primary hover:text-primary/80 transition-colors"
+                    className="text-xs text-[#FF6B6B] hover:text-[#FF8E53] transition-colors font-semibold"
                   >
                     Forgot Password?
                   </button>
@@ -161,13 +170,14 @@ export default function LoginForm() {
                   required
                   disabled={isLoading}
                   autoComplete="current-password"
+                  className="input-playful"
                 />
               </div>
 
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                className="w-full btn-3d bg-[#FF6B6B] text-white hover:bg-[#FF5252] h-12 text-base"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -185,14 +195,14 @@ export default function LoginForm() {
             </form>
 
             {/* Register Link */}
-            <div className="mt-6 text-center text-sm text-muted-foreground">
+            <div className="mt-6 text-center text-sm text-[#8B7E74]">
               Don&apos;t have an account?{" "}
               <button
                 type="button"
                 onClick={() => setCurrentView("register")}
-                className="font-medium text-primary hover:text-primary/80 transition-colors"
+                className="font-bold text-[#FF6B6B] hover:text-[#FF8E53] transition-colors"
               >
-                Register
+                Register 🎉
               </button>
             </div>
 
@@ -201,7 +211,7 @@ export default function LoginForm() {
               <button
                 type="button"
                 onClick={() => setCurrentView("landing")}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="text-xs text-[#8B7E74] hover:text-[#3D3028] transition-colors font-medium"
               >
                 &larr; Back to Home
               </button>

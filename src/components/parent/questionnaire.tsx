@@ -37,6 +37,8 @@ interface SectionConfig {
   key: SectionKey;
   title: string;
   icon: React.ReactNode;
+  iconBubble: string;
+  color: string;
   questions: {
     id: string;
     text: string;
@@ -49,7 +51,9 @@ const SECTIONS: SectionConfig[] = [
   {
     key: "A",
     title: "Section A - Attention",
-    icon: <Brain className="size-5 text-amber-600" />,
+    icon: <Brain className="size-5" />,
+    iconBubble: "icon-bubble-yellow",
+    color: "#F59E0B",
     questions: [
       {
         id: "q1",
@@ -74,7 +78,9 @@ const SECTIONS: SectionConfig[] = [
   {
     key: "B",
     title: "Section B - Emotional",
-    icon: <Heart className="size-5 text-rose-500" />,
+    icon: <Heart className="size-5" />,
+    iconBubble: "icon-bubble-pink",
+    color: "#F43F5E",
     questions: [
       {
         id: "q1",
@@ -99,7 +105,9 @@ const SECTIONS: SectionConfig[] = [
   {
     key: "C",
     title: "Section C - Social",
-    icon: <Users className="size-5 text-emerald-600" />,
+    icon: <Users className="size-5" />,
+    iconBubble: "icon-bubble-green",
+    color: "#6BCB77",
     questions: [
       {
         id: "q1",
@@ -247,17 +255,17 @@ export default function Questionnaire() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-          Behavioral Questionnaire
+      <div className="mb-6 animate-bounce-in">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground flex items-center gap-2">
+          🧠 Behavioral Questionnaire
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="text-muted-foreground mt-1 font-medium">
           Answer questions about your child&apos;s behavior in different areas
         </p>
       </div>
 
-      {/* Section Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+      {/* Section Tabs - Colorful 3D Pills */}
+      <div className="flex gap-3 mb-6 overflow-x-auto pb-1">
         {SECTIONS.map((section, idx) => {
           const complete = isSectionComplete(idx);
           const active = idx === activeSection;
@@ -269,18 +277,21 @@ export default function Questionnaire() {
                   setActiveSection(idx);
                 }
               }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors border ${
+              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
                 active
-                  ? "bg-primary text-primary-foreground border-primary"
+                  ? "btn-3d text-white shadow-lg scale-105"
                   : complete
-                  ? "bg-green-50 text-green-700 border-green-200"
-                  : "bg-muted text-muted-foreground border-transparent"
+                  ? "bg-green-50 text-green-700 border-2 border-green-200 shadow-md"
+                  : "bg-muted/50 text-muted-foreground border-2 border-transparent"
               }`}
+              style={active ? { backgroundColor: section.color } : undefined}
             >
               {complete ? (
                 <CheckCircle2 className="size-4" />
               ) : active ? (
-                section.icon
+                <div className={`${section.iconBubble} icon-bubble size-6 rounded-lg`}>
+                  {section.icon}
+                </div>
               ) : (
                 <div className="size-4 rounded-full border-2 border-current" />
               )}
@@ -291,32 +302,39 @@ export default function Questionnaire() {
         })}
       </div>
 
-      {/* Progress indicator */}
-      <div className="flex items-center gap-1 mb-6">
-        {SECTIONS.map((_, idx) => (
+      {/* Progress indicator - Rainbow gradient */}
+      <div className="flex items-center gap-1.5 mb-6">
+        {SECTIONS.map((section, idx) => (
           <div
             key={idx}
-            className={`h-1.5 flex-1 rounded-full transition-colors ${
-              idx <= activeSection
-                ? isSectionComplete(idx)
-                  ? "bg-green-500"
-                  : "bg-primary"
-                : "bg-muted"
+            className={`h-2 flex-1 rounded-full transition-all duration-300 ${
+              idx < activeSection
+                ? "bg-green-400"
+                : idx === activeSection
+                ? "animate-pulse"
+                : "bg-muted/50"
             }`}
+            style={
+              idx === activeSection
+                ? { background: `linear-gradient(90deg, ${section.color}, ${section.color}88)` }
+                : undefined
+            }
           />
         ))}
       </div>
 
       {/* Current Section Card */}
-      <Card>
+      <Card className="card-3d animate-bounce-in" style={{ borderLeftColor: currentSection.color, borderLeftWidth: "4px" }}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {currentSection.icon}
-            {currentSection.title}
+          <CardTitle className="flex items-center gap-3">
+            <div className={`${currentSection.iconBubble} icon-bubble size-10 rounded-xl`}>
+              {currentSection.icon}
+            </div>
+            <span style={{ color: currentSection.color }}>{currentSection.title}</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {currentSection.questions.map((question) => {
+          {currentSection.questions.map((question, qIdx) => {
             const errKey = `${sectionKey}-${question.id}`;
             const currentAnswer =
               sectionAnswers[question.id as keyof QuestionAnswer];
@@ -324,9 +342,20 @@ export default function Questionnaire() {
             return (
               <div
                 key={question.id}
-                className="space-y-3"
+                className="space-y-3 bg-white/60 rounded-xl p-4 border-2 border-black/5"
               >
-                <Label className="text-sm font-medium">
+                <Label className="text-sm font-bold flex items-center gap-2">
+                  <span
+                    className="number-pop text-white text-xs"
+                    style={{
+                      background: currentSection.color,
+                      width: "1.5rem",
+                      height: "1.5rem",
+                      fontSize: "0.7rem",
+                    }}
+                  >
+                    {qIdx + 1}
+                  </span>
                   {question.text}
                 </Label>
 
@@ -334,17 +363,30 @@ export default function Questionnaire() {
                   <RadioGroup
                     value={currentAnswer}
                     onValueChange={(val) => updateAnswer(question.id, val)}
-                    className="flex flex-wrap gap-4"
+                    className="flex flex-wrap gap-3"
                   >
                     {question.options.map((opt) => (
-                      <div key={opt} className="flex items-center gap-2">
+                      <div
+                        key={opt}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all cursor-pointer ${
+                          currentAnswer === opt
+                            ? "border-current bg-opacity-10"
+                            : "border-transparent bg-muted/30 hover:bg-muted/50"
+                        }`}
+                        style={
+                          currentAnswer === opt
+                            ? { borderColor: currentSection.color, backgroundColor: `${currentSection.color}10` }
+                            : undefined
+                        }
+                      >
                         <RadioGroupItem
                           value={opt}
                           id={`${sectionKey}-${question.id}-${opt}`}
+                          style={currentAnswer === opt ? { color: currentSection.color, borderColor: currentSection.color } : undefined}
                         />
                         <Label
                           htmlFor={`${sectionKey}-${question.id}-${opt}`}
-                          className="font-normal cursor-pointer"
+                          className="font-medium cursor-pointer"
                         >
                           {formatOptionLabel(opt)}
                         </Label>
@@ -357,8 +399,8 @@ export default function Questionnaire() {
                     onValueChange={(val) => updateAnswer(question.id, val)}
                   >
                     <SelectTrigger
-                      className={`w-full ${
-                        validationErrors[errKey] ? "border-destructive" : ""
+                      className={`w-full input-playful ${
+                        validationErrors[errKey] ? "border-[#FF6B6B]" : ""
                       }`}
                     >
                       <SelectValue placeholder="Select an answer" />
@@ -374,7 +416,7 @@ export default function Questionnaire() {
                 )}
 
                 {validationErrors[errKey] && (
-                  <p className="text-sm text-destructive flex items-center gap-1">
+                  <p className="text-sm text-[#FF6B6B] flex items-center gap-1 font-medium">
                     <AlertCircle className="size-3.5" />
                     {validationErrors[errKey]}
                   </p>
@@ -387,7 +429,7 @@ export default function Questionnaire() {
 
       {/* Error Message */}
       {error && (
-        <div className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive flex items-center gap-2">
+        <div className="mt-4 rounded-xl bg-[#FF6B6B10] p-4 text-sm text-[#FF6B6B] flex items-center gap-2 font-semibold border-2 border-[#FF6B6B20]">
           <AlertCircle className="size-4 shrink-0" />
           {error}
         </div>
@@ -402,14 +444,17 @@ export default function Questionnaire() {
               ? () => setCurrentView("parent-registration")
               : handlePrevSection
           }
-          className="gap-1.5"
+          className="gap-1.5 rounded-xl border-2 font-semibold hover:bg-muted/50"
         >
           <ChevronLeft className="size-4" />
           {activeSection === 0 ? "Back to Registration" : "Previous"}
         </Button>
 
         {activeSection < SECTIONS.length - 1 ? (
-          <Button onClick={handleNextSection} className="gap-1.5">
+          <Button
+            onClick={handleNextSection}
+            className="btn-3d bg-[#FF6B6B] hover:bg-[#FF5252] text-white gap-1.5 rounded-xl"
+          >
             Next Section
             <ChevronRight className="size-4" />
           </Button>
@@ -417,7 +462,7 @@ export default function Questionnaire() {
           <Button
             onClick={handleSubmit}
             disabled={submitting}
-            className="gap-1.5"
+            className="btn-3d-green bg-[#6BCB77] hover:bg-[#5AB868] text-white gap-1.5 rounded-xl"
           >
             {submitting ? (
               <>
@@ -440,13 +485,18 @@ export default function Questionnaire() {
           <Badge
             key={section.key}
             variant={isSectionComplete(idx) ? "default" : "outline"}
-            className={
+            className={`badge-3d font-semibold ${
               isSectionComplete(idx)
-                ? "bg-green-100 text-green-700 border-green-200"
-                : ""
+                ? "text-white border-0"
+                : "border-2"
+            }`}
+            style={
+              isSectionComplete(idx)
+                ? { backgroundColor: section.color }
+                : { borderColor: `${section.color}40`, color: section.color }
             }
           >
-            Section {section.key}: {isSectionComplete(idx) ? "Complete" : "Incomplete"}
+            Section {section.key}: {isSectionComplete(idx) ? "Complete ✓" : "Incomplete"}
           </Badge>
         ))}
       </div>

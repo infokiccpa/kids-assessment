@@ -14,7 +14,7 @@ import Questionnaire from "@/components/parent/questionnaire";
 import VideoTasks from "@/components/parent/video-tasks";
 import Review from "@/components/parent/review";
 import Results from "@/components/parent/results";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Heart } from "lucide-react";
 
 // Views that should use the parent layout (header + footer)
 const PARENT_VIEWS = [
@@ -58,13 +58,16 @@ export default function Home() {
   if (currentView === "admin-student-detail") return <StudentDetail />;
   if (currentView === "admin-settings") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4 p-8">
+      <div className="min-h-screen flex items-center justify-center bg-playful-warm">
+        <div className="card-3d bg-card text-center space-y-4 p-8 rounded-2xl">
+          <div className="icon-bubble icon-bubble-purple size-14 mx-auto text-2xl">
+            ⚙️
+          </div>
           <h1 className="text-2xl font-bold text-foreground">
             Admin Settings
           </h1>
           <p className="text-muted-foreground">
-            Settings page is coming soon.
+            Settings page is coming soon. Stay tuned! 🎉
           </p>
         </div>
       </div>
@@ -92,7 +95,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-playful-warm">
       {/* Parent Header */}
       <ParentHeader />
 
@@ -100,16 +103,18 @@ export default function Home() {
       <main className="flex-1">{renderParentContent()}</main>
 
       {/* Sticky Footer */}
-      <footer className="mt-auto border-t bg-muted/30">
+      <footer className="mt-auto bg-white/80 backdrop-blur-sm">
+        <div className="divider-rainbow" />
         <div className="container mx-auto flex flex-col items-center gap-2 px-4 py-4 sm:flex-row sm:justify-center sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <Sparkles className="h-3.5 w-3.5 text-[#FF6B6B] animate-sparkle" />
             <span>Powered by AI</span>
           </div>
           <span className="hidden sm:inline text-muted-foreground/50">
             &bull;
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Heart className="h-3 w-3 text-[#FF6B6B] fill-[#FF6B6B]" />
             Safe Educational Assessment Only &mdash; Not a Medical Diagnosis
           </span>
         </div>

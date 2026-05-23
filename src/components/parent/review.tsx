@@ -15,6 +15,8 @@ import {
   Brain,
   Sparkles,
   ChevronLeft,
+  Heart,
+  Users,
 } from "lucide-react";
 
 interface StudentData {
@@ -52,6 +54,13 @@ const TASK_LABELS: Record<string, string> = {
   TASK2: "Instruction Following",
   TASK3: "Emotional Response",
   TASK4: "Self Introduction",
+};
+
+const TASK_VIDEO_COLORS: Record<string, string> = {
+  TASK1: "#FF6B6B",
+  TASK2: "#9B59B6",
+  TASK3: "#6BCB77",
+  TASK4: "#4D96FF",
 };
 
 export default function Review() {
@@ -117,7 +126,10 @@ export default function Review() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <div className="text-center">
+          <Loader2 className="size-10 animate-spin text-[#FF6B6B] mx-auto mb-3" />
+          <p className="text-muted-foreground font-medium">Loading your review...</p>
+        </div>
       </div>
     );
   }
@@ -125,12 +137,17 @@ export default function Review() {
   if (!student && !error) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 text-center">
-        <AlertCircle className="size-12 mx-auto text-muted-foreground mb-4" />
-        <h2 className="text-lg font-semibold mb-2">No Student Selected</h2>
+        <div className="icon-bubble icon-bubble-coral size-16 mx-auto mb-4 p-4">
+          <AlertCircle className="size-8" />
+        </div>
+        <h2 className="text-lg font-bold mb-2">No Student Selected</h2>
         <p className="text-muted-foreground mb-4">
           Please go back to the dashboard and select an application.
         </p>
-        <Button onClick={() => setCurrentView("parent-dashboard")}>
+        <Button
+          onClick={() => setCurrentView("parent-dashboard")}
+          className="btn-3d bg-[#FF6B6B] hover:bg-[#FF5252] text-white border-none rounded-xl font-semibold"
+        >
           Go to Dashboard
         </Button>
       </div>
@@ -169,8 +186,8 @@ export default function Review() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+      <div className="mb-6 animate-bounce-in">
+        <h1 className="text-2xl sm:text-3xl font-bold rainbow-text">
           Review & Submit
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -179,139 +196,154 @@ export default function Review() {
       </div>
 
       {/* Student Application Summary */}
-      <Card className="mb-4">
+      <Card className="mb-5 card-3d bg-playful-card-coral">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <FileText className="size-5 text-primary" />
+          <CardTitle className="flex items-center gap-2.5 text-base">
+            <span className="icon-bubble icon-bubble-coral size-9 p-2">
+              <FileText className="size-5" />
+            </span>
             Application Summary
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
             <div className="text-muted-foreground">Application ID</div>
-            <div className="font-mono font-medium">
+            <div className="font-mono font-semibold bg-white/60 rounded-lg px-2 py-0.5 text-center">
               {student?.applicationId}
             </div>
             <div className="text-muted-foreground">Child Name</div>
-            <div className="font-medium">{student?.childName}</div>
+            <div className="font-semibold">{student?.childName}</div>
             <div className="text-muted-foreground">Date of Birth</div>
-            <div className="font-medium">{student?.dateOfBirth}</div>
+            <div className="font-semibold">{student?.dateOfBirth}</div>
             <div className="text-muted-foreground">Gender</div>
-            <div className="font-medium">{student?.gender}</div>
+            <div className="font-semibold">{student?.gender}</div>
             <div className="text-muted-foreground">School</div>
-            <div className="font-medium">{student?.schoolApplied}</div>
+            <div className="font-semibold">{student?.schoolApplied}</div>
             <div className="text-muted-foreground">Grade</div>
-            <div className="font-medium">{student?.gradeApplied}</div>
+            <div className="font-semibold">{student?.gradeApplied}</div>
           </div>
         </CardContent>
       </Card>
 
       {/* Questionnaire Summary */}
-      <Card className="mb-4">
+      <Card className="mb-5 card-3d bg-playful-card-purple">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Brain className="size-5 text-amber-600" />
+          <CardTitle className="flex items-center gap-2.5 text-base">
+            <span className="icon-bubble icon-bubble-purple size-9 p-2">
+              <Brain className="size-5" />
+            </span>
             Questionnaire Responses
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-5">
           {/* Section A */}
           <div>
-            <h4 className="text-sm font-semibold text-amber-700 mb-2">
+            <h4 className="text-sm font-bold text-[#D4A017] mb-3 flex items-center gap-2">
+              <span className="icon-bubble icon-bubble-yellow size-6 p-1">
+                <Brain className="size-3.5" />
+              </span>
               Section A - Attention
             </h4>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
                 <span className="text-muted-foreground">
                   Sit for 5 minutes?
                 </span>
-                <Badge variant="outline" className="text-xs">
+                <Badge className="badge-3d bg-[#FEC163]/20 text-[#D4A017] border-[#FEC163]/30 text-xs">
                   {formatOptionLabel(sectionA.q1 || "N/A")}
                 </Badge>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
                 <span className="text-muted-foreground">
                   Respond when called?
                 </span>
-                <Badge variant="outline" className="text-xs">
+                <Badge className="badge-3d bg-[#FEC163]/20 text-[#D4A017] border-[#FEC163]/30 text-xs">
                   {formatOptionLabel(sectionA.q2 || "N/A")}
                 </Badge>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
                 <span className="text-muted-foreground">
                   Follow instructions?
                 </span>
-                <Badge variant="outline" className="text-xs">
+                <Badge className="badge-3d bg-[#FEC163]/20 text-[#D4A017] border-[#FEC163]/30 text-xs">
                   {formatOptionLabel(sectionA.q3 || "N/A")}
                 </Badge>
               </div>
             </div>
           </div>
 
-          <Separator />
+          {/* Rainbow Divider */}
+          <div className="divider-rainbow" />
 
           {/* Section B */}
           <div>
-            <h4 className="text-sm font-semibold text-rose-600 mb-2">
+            <h4 className="text-sm font-bold text-[#E74C7A] mb-3 flex items-center gap-2">
+              <span className="icon-bubble icon-bubble-pink size-6 p-1">
+                <Heart className="size-3.5" />
+              </span>
               Section B - Emotional
             </h4>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
                 <span className="text-muted-foreground">
                   Cry during separation?
                 </span>
-                <Badge variant="outline" className="text-xs">
+                <Badge className="badge-3d bg-[#FF6B9D]/20 text-[#C44569] border-[#FF6B9D]/30 text-xs">
                   {formatOptionLabel(sectionB.q1 || "N/A")}
                 </Badge>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
                 <span className="text-muted-foreground">
                   Comfortable in new places?
                 </span>
-                <Badge variant="outline" className="text-xs">
+                <Badge className="badge-3d bg-[#FF6B9D]/20 text-[#C44569] border-[#FF6B9D]/30 text-xs">
                   {formatOptionLabel(sectionB.q2 || "N/A")}
                 </Badge>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
                 <span className="text-muted-foreground">
                   Disturbed by loud sounds?
                 </span>
-                <Badge variant="outline" className="text-xs">
+                <Badge className="badge-3d bg-[#FF6B9D]/20 text-[#C44569] border-[#FF6B9D]/30 text-xs">
                   {formatOptionLabel(sectionB.q3 || "N/A")}
                 </Badge>
               </div>
             </div>
           </div>
 
-          <Separator />
+          {/* Rainbow Divider */}
+          <div className="divider-rainbow" />
 
           {/* Section C */}
           <div>
-            <h4 className="text-sm font-semibold text-emerald-600 mb-2">
+            <h4 className="text-sm font-bold text-[#27AE60] mb-3 flex items-center gap-2">
+              <span className="icon-bubble icon-bubble-green size-6 p-1">
+                <Users className="size-3.5" />
+              </span>
               Section C - Social
             </h4>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
                 <span className="text-muted-foreground">
                   Interact with other children?
                 </span>
-                <Badge variant="outline" className="text-xs">
+                <Badge className="badge-3d bg-[#6BCB77]/20 text-[#27AE60] border-[#6BCB77]/30 text-xs">
                   {formatOptionLabel(sectionC.q1 || "N/A")}
                 </Badge>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
                 <span className="text-muted-foreground">
                   Share toys with others?
                 </span>
-                <Badge variant="outline" className="text-xs">
+                <Badge className="badge-3d bg-[#6BCB77]/20 text-[#27AE60] border-[#6BCB77]/30 text-xs">
                   {formatOptionLabel(sectionC.q2 || "N/A")}
                 </Badge>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
                 <span className="text-muted-foreground">
                   Introduce themselves?
                 </span>
-                <Badge variant="outline" className="text-xs">
+                <Badge className="badge-3d bg-[#6BCB77]/20 text-[#27AE60] border-[#6BCB77]/30 text-xs">
                   {formatOptionLabel(sectionC.q3 || "N/A")}
                 </Badge>
               </div>
@@ -321,38 +353,50 @@ export default function Review() {
       </Card>
 
       {/* Video Upload Status */}
-      <Card className="mb-4">
+      <Card className="mb-5 card-3d bg-playful-card-blue">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Video className="size-5 text-primary" />
+          <CardTitle className="flex items-center gap-2.5 text-base">
+            <span className="icon-bubble icon-bubble-blue size-9 p-2">
+              <Video className="size-5" />
+            </span>
             Video Upload Status
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {["TASK1", "TASK2", "TASK3", "TASK4"].map((taskType) => {
               const video = videoMap[taskType];
               const isUploaded = !!video;
+              const color = TASK_VIDEO_COLORS[taskType];
               return (
                 <div
                   key={taskType}
-                  className="flex items-center justify-between text-sm"
+                  className="flex items-center justify-between text-sm bg-white/50 rounded-xl px-3 py-2.5"
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     {isUploaded ? (
-                      <CheckCircle2 className="size-4 text-green-600" />
+                      <span
+                        className="icon-bubble icon-bubble-green size-7 p-1.5"
+                      >
+                        <CheckCircle2 className="size-3.5" />
+                      </span>
                     ) : (
-                      <AlertCircle className="size-4 text-amber-500" />
+                      <span
+                        className="icon-bubble icon-bubble-yellow size-7 p-1.5"
+                      >
+                        <AlertCircle className="size-3.5" />
+                      </span>
                     )}
-                    <span>{TASK_LABELS[taskType]}</span>
+                    <span className="font-medium" style={{ color }}>
+                      {TASK_LABELS[taskType]}
+                    </span>
                   </div>
                   <Badge
-                    variant="outline"
-                    className={
+                    className={`badge-3d ${
                       isUploaded
-                        ? "bg-green-100 text-green-700 border-green-300"
-                        : "bg-amber-100 text-amber-700 border-amber-300"
-                    }
+                        ? "bg-[#6BCB77]/20 text-[#27AE60] border-[#6BCB77]/30"
+                        : "bg-[#FEC163]/20 text-[#D4A017] border-[#FEC163]/30"
+                    }`}
                   >
                     {isUploaded
                       ? `${(video.fileSize / 1024 / 1024).toFixed(1)} MB`
@@ -367,34 +411,37 @@ export default function Review() {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive flex items-center gap-2">
+        <div className="mb-5 rounded-xl bg-red-50 p-3 text-sm text-red-600 flex items-center gap-2 border-2 border-red-200 shadow-md">
           <AlertCircle className="size-4 shrink-0" />
           {error}
         </div>
       )}
 
-      {/* Analyzing State */}
+      {/* Analyzing State - Animated sparkle */}
       {analyzing && (
-        <Card className="mb-4 border-primary/30 bg-primary/5">
-          <CardContent className="p-6 text-center">
-            <Loader2 className="size-10 animate-spin text-primary mx-auto mb-3" />
-            <h3 className="font-semibold text-lg mb-1">
+        <Card className="mb-5 card-3d bg-playful-card-coral border-2 border-[#FF6B6B]/30">
+          <CardContent className="p-8 text-center">
+            <div className="animate-sparkle inline-block mb-4">
+              <Sparkles className="size-12 text-[#FF6B6B]" />
+            </div>
+            <h3 className="font-bold text-lg mb-2 rainbow-text">
               AI Analysis in Progress
             </h3>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-sm leading-relaxed">
               Our AI is analyzing the questionnaire responses and video
               recordings. This may take a moment...
             </p>
+            <div className="divider-rainbow mt-4 mx-auto w-32" />
           </CardContent>
         </Card>
       )}
 
       {/* Navigation Buttons */}
-      <div className="flex justify-between mt-6">
+      <div className="flex justify-between mt-8">
         <Button
           variant="outline"
           onClick={() => setCurrentView("parent-videos")}
-          className="gap-1.5"
+          className="gap-1.5 btn-3d bg-white border-[#9B59B6]/30 text-[#8E44AD] hover:bg-[#9B59B6]/10 rounded-xl font-semibold"
           disabled={analyzing}
         >
           <ChevronLeft className="size-4" />
@@ -404,7 +451,7 @@ export default function Review() {
         <Button
           onClick={handleAnalyze}
           disabled={analyzing}
-          className="gap-1.5"
+          className="gap-1.5 btn-3d bg-[#FF6B6B] hover:bg-[#FF5252] text-white border-none rounded-xl font-semibold"
         >
           {analyzing ? (
             <>
