@@ -7,6 +7,8 @@ import RegisterForm from "@/components/auth/register-form";
 import ForgotPassword from "@/components/auth/forgot-password";
 import ParentHeader from "@/components/shared/parent-header";
 import AdminDashboard from "@/components/admin/admin-dashboard";
+import AdminApplications from "@/components/admin/admin-applications";
+import AdminSettings from "@/components/admin/admin-settings";
 import StudentDetail from "@/components/admin/student-detail";
 import ParentDashboard from "@/components/parent/parent-dashboard";
 import RegistrationForm from "@/components/parent/registration-form";
@@ -14,6 +16,7 @@ import Questionnaire from "@/components/parent/questionnaire";
 import VideoTasks from "@/components/parent/video-tasks";
 import Review from "@/components/parent/review";
 import Results from "@/components/parent/results";
+import AdminLayout from "@/components/admin/admin-layout";
 import { Sparkles, Heart } from "lucide-react";
 
 // Views that should use the parent layout (header + footer)
@@ -52,25 +55,21 @@ export default function Home() {
     return <LandingPage />;
   }
 
-  // Admin views (have their own layout with sidebar)
+  // Admin views
   if (currentView === "admin-dashboard") return <AdminDashboard />;
-  if (currentView === "admin-students") return <AdminDashboard />;
+  if (currentView === "admin-students") {
+    return (
+      <AdminLayout activeView="admin-students">
+        <AdminApplications />
+      </AdminLayout>
+    );
+  }
   if (currentView === "admin-student-detail") return <StudentDetail />;
   if (currentView === "admin-settings") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-playful-warm">
-        <div className="card-3d bg-card text-center space-y-4 p-8 rounded-2xl">
-          <div className="icon-bubble icon-bubble-purple size-14 mx-auto text-2xl">
-            ⚙️
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Admin Settings
-          </h1>
-          <p className="text-muted-foreground">
-            Settings page is coming soon. Stay tuned! 🎉
-          </p>
-        </div>
-      </div>
+      <AdminLayout activeView="admin-settings">
+        <AdminSettings />
+      </AdminLayout>
     );
   }
 
