@@ -107,7 +107,7 @@ export default function Home() {
         <div className="container mx-auto flex flex-col items-center gap-2 px-4 py-4 sm:flex-row sm:justify-center sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Sparkles className="h-3.5 w-3.5 text-[#FF6B6B] animate-sparkle" />
-            <span>Powered by AI</span>
+            <span>Powered by Kam Global AI</span>
           </div>
           <span className="hidden sm:inline text-muted-foreground/50">
             &bull;

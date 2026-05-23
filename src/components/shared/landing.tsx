@@ -296,7 +296,7 @@ export default function LandingPage() {
               <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF6B6B] to-[#FF8E53] text-white">
                 <Sparkles className="h-3.5 w-3.5" />
               </div>
-              <span className="font-semibold">Powered by AI</span>
+              <span className="font-semibold">Powered by Kam Global AI</span>
             </div>
             <span className="hidden sm:inline text-muted-foreground/30 text-lg">
               &#x2022;
