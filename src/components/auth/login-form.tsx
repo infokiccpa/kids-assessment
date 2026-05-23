@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Image from "next/image";
-import { Loader2, LogIn, AlertCircle, Info } from "lucide-react";
+import { Loader2, LogIn, AlertCircle, Shield } from "lucide-react";
 import { signIn } from "next-auth/react";
 
 export default function LoginForm() {
@@ -116,21 +116,19 @@ export default function LoginForm() {
                 </Alert>
               )}
 
-              {/* Demo hint */}
-              <Alert className="border-2 border-amber-200 bg-amber-50/80 rounded-xl">
-                <Info className="h-4 w-4 text-amber-500" />
-                <AlertDescription className="text-xs text-[#8B7E74]">
-                  <strong className="text-[#3D3028]">Demo:</strong> Use{" "}
-                  <code className="rounded-lg bg-amber-100 px-1.5 py-0.5 text-xs font-mono text-amber-700 border border-amber-200">
-                    admin@school.com
-                  </code>{" "}
-                  /{" "}
-                  <code className="rounded-lg bg-amber-100 px-1.5 py-0.5 text-xs font-mono text-amber-700 border border-amber-200">
-                    admin123
-                  </code>{" "}
-                  to sign in as admin.
-                </AlertDescription>
-              </Alert>
+              {/* Demo Admin Login Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("admin@school.com");
+                  setPassword("admin123");
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-[#4D96FF]/30 bg-gradient-to-r from-[#4D96FF]/10 to-[#9B59B6]/10 p-3 text-sm font-semibold text-[#3D3028] transition-all duration-200 hover:border-[#4D96FF] hover:shadow-[0_4px_12px_rgba(77,150,255,0.2)] hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <Shield className="h-4 w-4 text-[#4D96FF]" />
+                Demo Admin Login
+                <span className="text-xs text-[#8B7E74] font-normal ml-1">(click to auto-fill)</span>
+              </button>
 
               {/* Email */}
               <div className="space-y-2">

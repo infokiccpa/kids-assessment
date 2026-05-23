@@ -13,7 +13,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Image from "next/image";
 import {
   Loader2,
@@ -32,7 +31,6 @@ export default function RegisterForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
-  const [role, setRole] = useState("PARENT");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -67,7 +65,7 @@ export default function RegisterForm() {
           email,
           password,
           phone: phone || undefined,
-          role,
+          role: "PARENT",
         }),
       });
 
@@ -261,47 +259,15 @@ export default function RegisterForm() {
                 </div>
               </div>
 
-              {/* Role Selection */}
-              <div className="space-y-3">
-                <Label className="text-[#3D3028] font-semibold">Account Type</Label>
-                <RadioGroup
-                  value={role}
-                  onValueChange={setRole}
-                  className="grid grid-cols-2 gap-3"
-                >
-                  <Label
-                    htmlFor="role-parent"
-                    className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all duration-200 ${
-                      role === "PARENT"
-                        ? "border-[#6BCB77] bg-[#6BCB77]/10 shadow-[0_4px_0_#27AE60,0_6px_10px_rgba(0,0,0,0.08)] -translate-y-0.5"
-                        : "border-[#e8e0d8] hover:border-[#6BCB77]/40 bg-white"
-                    }`}
-                  >
-                    <RadioGroupItem value="PARENT" id="role-parent" className="text-[#6BCB77]" />
-                    <div>
-                      <div className="text-sm font-bold text-[#3D3028]">Parent 👨‍👩‍👧</div>
-                      <div className="text-xs text-[#8B7E74]">
-                        Register your child
-                      </div>
-                    </div>
-                  </Label>
-                  <Label
-                    htmlFor="role-admin"
-                    className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all duration-200 ${
-                      role === "ADMIN"
-                        ? "border-[#4D96FF] bg-[#4D96FF]/10 shadow-[0_4px_0_#2980B9,0_6px_10px_rgba(0,0,0,0.08)] -translate-y-0.5"
-                        : "border-[#e8e0d8] hover:border-[#4D96FF]/40 bg-white"
-                    }`}
-                  >
-                    <RadioGroupItem value="ADMIN" id="role-admin" className="text-[#4D96FF]" />
-                    <div>
-                      <div className="text-sm font-bold text-[#3D3028]">School Admin 🏫</div>
-                      <div className="text-xs text-[#8B7E74]">
-                        Manage applications
-                      </div>
-                    </div>
-                  </Label>
-                </RadioGroup>
+              {/* Parent Account Badge */}
+              <div className="flex items-center gap-3 rounded-xl border-2 border-[#6BCB77] bg-[#6BCB77]/10 p-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#6BCB77] text-white text-lg">👨‍👩‍👧</div>
+                <div>
+                  <div className="text-sm font-bold text-[#3D3028]">Parent Account</div>
+                  <div className="text-xs text-[#8B7E74]">
+                    Register to assess your child’s kindergarten readiness
+                  </div>
+                </div>
               </div>
 
               {/* Submit Button */}
