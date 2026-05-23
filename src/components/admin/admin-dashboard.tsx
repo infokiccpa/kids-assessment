@@ -313,9 +313,9 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen flex bg-playful-warm">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r border-purple-100/50">
+    <div className="h-screen flex overflow-hidden bg-playful-warm">
+      {/* Desktop Sidebar - Fixed, no scroll */}
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r border-purple-100/50 flex-shrink-0">
         <SidebarContent />
       </aside>
 
@@ -329,10 +329,10 @@ export default function AdminDashboard() {
         </SheetContent>
       </Sheet>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
-        <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-purple-100/40 bg-white/80 backdrop-blur-md px-4 sm:px-6">
+      {/* Main Content - Only this area scrolls */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Top Bar - Stays fixed at top */}
+        <header className="flex-shrink-0 z-40 flex h-16 items-center gap-4 border-b border-purple-100/40 bg-white/80 backdrop-blur-md px-4 sm:px-6">
           <Button
             variant="ghost"
             size="icon"

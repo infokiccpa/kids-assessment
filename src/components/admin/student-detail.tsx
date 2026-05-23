@@ -396,9 +396,9 @@ export default function StudentDetail() {
   ];
 
   return (
-    <div className="min-h-screen bg-playful-warm">
-      {/* Top Bar */}
-      <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-purple-100/40 bg-white/80 backdrop-blur-md px-4 sm:px-6">
+    <div className="h-screen flex flex-col overflow-hidden bg-playful-warm">
+      {/* Top Bar - Fixed at top */}
+      <header className="flex-shrink-0 z-40 flex h-16 items-center gap-4 border-b border-purple-100/40 bg-white/80 backdrop-blur-md px-4 sm:px-6">
         <Button
           variant="ghost"
           size="sm"
@@ -433,7 +433,8 @@ export default function StudentDetail() {
       </header>
 
       {/* Content */}
-      <main className="max-w-5xl mx-auto p-4 sm:p-6 space-y-6 custom-scrollbar">
+      <main className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
         {error && (
           <Alert variant="destructive" className="rounded-2xl border-2 border-red-200 shadow-lg">
             <AlertTriangle className="h-4 w-4" />
@@ -1108,6 +1109,7 @@ export default function StudentDetail() {
 
         {/* Spacer at bottom */}
         <div className="h-4" />
+        </div>
       </main>
 
       {/* Action Dialog */}
