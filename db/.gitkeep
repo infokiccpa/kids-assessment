@@ -1,0 +1,1 @@
+# Keep this directory in git so that the local SQLite database folder exists in deployment environments.
