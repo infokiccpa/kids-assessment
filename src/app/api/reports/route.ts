@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { connectDB } from "@/lib/mongodb";
+import { Student, Questionnaire, Video, AIAnalysis, AdminNote, Report } from "@/lib/models";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import fs from "fs";
@@ -7,6 +8,7 @@ import path from "path";
 
 export async function GET(req: NextRequest) {
   try {
+    await connectDB();
     const studentId = req.nextUrl.searchParams.get("studentId");
 
     if (!studentId) {
@@ -16,32 +18,28 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get student with all related data
-    const student = await db.student.findUnique({
-      where: { id: studentId },
-      include: {
-        questionnaire: true,
-        videos: true,
-        aiAnalysis: true,
-        adminNotes: true,
-      },
-    });
-
+    const student = await Student.findById(studentId).lean();
     if (!student) {
-      return NextResponse.json(
-        { error: "Student not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
-    if (!student.aiAnalysis || student.aiAnalysis.analysisStatus !== "COMPLETED") {
+    const [questionnaire, videos, aiAnalysis, adminNotes] = await Promise.all([
+      Questionnaire.findOne({ studentId }).lean(),
+      Video.find({ studentId }).lean(),
+      AIAnalysis.findOne({ studentId }).lean(),
+      AdminNote.find({ studentId }).sort({ createdAt: -1 }).lean(),
+    ]);
+
+    const studentData = { ...student, questionnaire, videos, aiAnalysis, adminNotes };
+
+    if (!studentData.aiAnalysis || (studentData.aiAnalysis as any).analysisStatus !== "COMPLETED") {
       return NextResponse.json(
         { error: "AI analysis must be completed before generating a report" },
         { status: 400 }
       );
     }
 
-    const analysis = student.aiAnalysis;
+    const analysis = studentData.aiAnalysis as any;
 
     // Parse risk flags
     let riskFlags: string[] = [];
@@ -51,15 +49,14 @@ export async function GET(req: NextRequest) {
       riskFlags = [];
     }
 
-    // Parse questionnaire sections
     const sectionA: Record<string, string> = safeParseJSON(
-      student.questionnaire?.sectionA || "{}"
+      (studentData.questionnaire as any)?.sectionA || "{}"
     );
     const sectionB: Record<string, string> = safeParseJSON(
-      student.questionnaire?.sectionB || "{}"
+      (studentData.questionnaire as any)?.sectionB || "{}"
     );
     const sectionC: Record<string, string> = safeParseJSON(
-      student.questionnaire?.sectionC || "{}"
+      (studentData.questionnaire as any)?.sectionC || "{}"
     );
 
     // Generate PDF
@@ -102,19 +99,19 @@ export async function GET(req: NextRequest) {
       startY: yPos,
       head: [],
       body: [
-        ["Child Name", student.childName],
-        ["Date of Birth", student.dateOfBirth],
-        ["Age at Assessment", calculateAge(student.dateOfBirth)],
-        ["Gender", student.gender],
-        ["Nationality", student.nationality],
-        ["Languages Spoken", student.languagesSpoken],
-        ["School Applied", student.schoolApplied],
-        ["Grade Applied", student.gradeApplied],
-        ["Father", student.fatherName],
-        ["Mother", student.motherName],
-        ["Contact", student.mobileNumber],
-        ["Previous School", student.previousSchool || "N/A"],
-        ["Special Medical Notes", student.specialMedicalNotes || "None"],
+        ["Child Name", (studentData as any).childName],
+        ["Date of Birth", (studentData as any).dateOfBirth],
+        ["Age at Assessment", calculateAge((studentData as any).dateOfBirth)],
+        ["Gender", (studentData as any).gender],
+        ["Nationality", (studentData as any).nationality],
+        ["Languages Spoken", (studentData as any).languagesSpoken],
+        ["School Applied", (studentData as any).schoolApplied],
+        ["Grade Applied", (studentData as any).gradeApplied],
+        ["Father", (studentData as any).fatherName],
+        ["Mother", (studentData as any).motherName],
+        ["Contact", (studentData as any).mobileNumber],
+        ["Previous School", (studentData as any).previousSchool || "N/A"],
+        ["Special Medical Notes", (studentData as any).specialMedicalNotes || "None"],
       ],
       theme: "grid",
       styles: { fontSize: 9, cellPadding: 3 },
@@ -399,7 +396,7 @@ export async function GET(req: NextRequest) {
     }
 
     // ---- ADMIN NOTES ----
-    if (student.adminNotes.length > 0) {
+    if ((studentData.adminNotes as any[]).length > 0) {
       checkPageBreak(doc, yPos, 40);
       yPos = getYAfterPageBreak(doc, yPos, 40);
 
@@ -409,7 +406,7 @@ export async function GET(req: NextRequest) {
       doc.text("Admin Notes", 14, yPos);
       yPos += 2;
 
-      const adminNotesData = student.adminNotes.map((note) => [
+      const adminNotesData = (studentData.adminNotes as any[]).map((note: any) => [
         note.action,
         note.note,
         new Date(note.createdAt).toLocaleDateString(),
@@ -437,7 +434,7 @@ export async function GET(req: NextRequest) {
     }
 
     // ---- VIDEO TASKS SUMMARY ----
-    if (student.videos.length > 0) {
+    if ((studentData.videos as any[]).length > 0) {
       checkPageBreak(doc, yPos, 40);
       yPos = getYAfterPageBreak(doc, yPos, 40);
 
@@ -447,7 +444,7 @@ export async function GET(req: NextRequest) {
       doc.text("Video Task Submissions", 14, yPos);
       yPos += 2;
 
-      const videoData = student.videos.map((v) => [
+      const videoData = (studentData.videos as any[]).map((v: any) => [
         v.taskType,
         v.fileName,
         `${(v.fileSize / 1024 / 1024).toFixed(2)} MB`,
@@ -495,7 +492,7 @@ export async function GET(req: NextRequest) {
     doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
     doc.text(
-      `Report generated on ${new Date().toLocaleString()} | Application ${student.applicationId}`,
+      `Report generated on ${new Date().toLocaleString()} | Application ${(studentData as any).applicationId}`,
       pageWidth / 2,
       footerY + 16,
       { align: "center" }
@@ -511,32 +508,24 @@ export async function GET(req: NextRequest) {
     }
 
     // Save PDF file
-    const fileName = `report_${student.applicationId}_${Date.now()}.pdf`;
+    const fileName = `report_${(studentData as any).applicationId}_${Date.now()}.pdf`;
     const filePath = path.join(reportsDir, fileName);
     fs.writeFileSync(filePath, pdfBuffer);
 
     const relativePath = `/uploads/reports/${fileName}`;
 
     // Create or update Report record
-    await db.report.upsert({
-      where: { studentId },
-      create: {
-        studentId,
-        filePath: relativePath,
-        generatedAt: new Date(),
-      },
-      update: {
-        filePath: relativePath,
-        generatedAt: new Date(),
-      },
-    });
+    await Report.findOneAndUpdate(
+      { studentId },
+      { filePath: relativePath, generatedAt: new Date() },
+      { new: true, upsert: true }
+    );
 
-    // Return the PDF as downloadable file
     return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="KRA_Report_${student.applicationId}.pdf"`,
+        "Content-Disposition": `inline; filename="KRA_Report_${(studentData as any).applicationId}.pdf"`,
         "Content-Length": pdfBuffer.length.toString(),
       },
     });

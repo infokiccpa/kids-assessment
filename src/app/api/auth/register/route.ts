@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { db } from "@/lib/db";
+import { connectDB } from "@/lib/mongodb";
+import { User } from "@/lib/models";
 
 export async function POST(req: NextRequest) {
   try {
+    await connectDB();
     const body = await req.json();
     const { email, name, password, role = "PARENT", phone } = body;
 
@@ -15,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const existingUser = await db.user.findUnique({ where: { email: normalizedEmail } });
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return NextResponse.json(
         { error: "Email already registered" },
@@ -24,13 +26,17 @@ export async function POST(req: NextRequest) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    const user = await db.user.create({
-      data: { email: normalizedEmail, name, password: hashedPassword, role, phone },
+    const user = await User.create({
+      email: normalizedEmail,
+      name,
+      password: hashedPassword,
+      role,
+      phone,
     });
 
     return NextResponse.json(
       {
-        id: user.id,
+        id: user._id.toString(),
         email: user.email,
         name: user.name,
         role: user.role,

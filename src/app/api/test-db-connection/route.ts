@@ -1,48 +1,42 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { connectDB } from "@/lib/mongodb";
+import { User } from "@/lib/models";
+import mongoose from "mongoose";
 
 export async function GET() {
-  console.log("Debugging database connection from within container...");
-  const dbUrl = process.env.DATABASE_URL;
-  
-  if (!dbUrl) {
+  const mongoUri = process.env.MONGODB_URI || "";
+  const maskedUri = mongoUri.replace(/:([^@]+)@/, ":****@");
+
+  if (!mongoUri) {
     return NextResponse.json({
       success: false,
-      error: "DATABASE_URL environment variable is missing inside the container!",
-      envKeys: Object.keys(process.env).filter(k => k.includes("DB") || k.includes("DATABASE")),
+      error: "MONGODB_URI environment variable is missing inside the container!",
+      envKeys: Object.keys(process.env).filter(
+        (k) => k.includes("MONGO") || k.includes("DB")
+      ),
     });
   }
 
-  // Mask sensitive parts of the DB URL for safe logging
-  const maskedUrl = dbUrl.replace(/:([^@]+)@/, ":****@");
-
-  const prisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: dbUrl,
-      },
-    },
-  });
-
   try {
-    const userCount = await prisma.user.count();
-    await prisma.$disconnect();
+    await connectDB();
+    const userCount = await User.countDocuments();
     return NextResponse.json({
       success: true,
-      maskedUrl,
+      maskedUri,
       userCount,
-      message: "Database connected successfully from the server!",
+      mongooseState: mongoose.connection.readyState,
+      message: "MongoDB connected successfully!",
     });
   } catch (err: any) {
-    await prisma.$disconnect();
-    return NextResponse.json({
-      success: false,
-      maskedUrl,
-      errorName: err.name,
-      errorMessage: err.message,
-      errorCode: err.code,
-      meta: err.meta,
-      stack: err.stack,
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        maskedUri,
+        errorName: err.name,
+        errorMessage: err.message,
+        stack: err.stack,
+      },
+      { status: 500 }
+    );
   }
 }

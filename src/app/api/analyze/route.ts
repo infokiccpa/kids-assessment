@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { connectDB } from "@/lib/mongodb";
+import { Student, AIAnalysis, Notification } from "@/lib/models";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 import path from "path";
@@ -204,6 +205,7 @@ Respond with ONLY the JSON object.`,
 // ============================================
 export async function POST(req: NextRequest) {
   try {
+    await connectDB();
     const { studentId } = await req.json();
 
     if (!studentId) {
@@ -214,10 +216,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get student data with all related info
-    const student = await db.student.findUnique({
-      where: { id: studentId },
-      include: { questionnaire: true, videos: true, aiAnalysis: true },
-    });
+    const student = await Student.findById(studentId).lean();
 
     if (!student) {
       return NextResponse.json(
@@ -226,34 +225,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Get questionnaire and videos in parallel
+    const { Questionnaire, Video } = await import("@/lib/models");
+    const [questionnaire, videos] = await Promise.all([
+      Questionnaire.findOne({ studentId }).lean(),
+      Video.find({ studentId }).lean(),
+    ]);
+    const studentWithRelations = { ...student, questionnaire, videos, parentId: student.parentId };
+
     // Create or update AI analysis record
-    const analysis = await db.aIAnalysis.upsert({
-      where: { studentId },
-      create: {
-        studentId,
-        analysisStatus: "PROCESSING",
-        videoAnalysisStatus: "PROCESSING",
-        speechAnalysisStatus: "PROCESSING",
-        behavioralStatus: "PROCESSING",
-      },
-      update: {
-        analysisStatus: "PROCESSING",
-        videoAnalysisStatus: "PROCESSING",
-        speechAnalysisStatus: "PROCESSING",
-        behavioralStatus: "PROCESSING",
-      },
-    });
+    const analysis = await AIAnalysis.findOneAndUpdate(
+      { studentId },
+      { analysisStatus: "PROCESSING", videoAnalysisStatus: "PROCESSING", speechAnalysisStatus: "PROCESSING", behavioralStatus: "PROCESSING" },
+      { new: true, upsert: true }
+    );
 
     try {
       // Parse questionnaire data
-      const sectionA: Record<string, string> = student.questionnaire
-        ? safeParseJSON(student.questionnaire.sectionA)
+      const sectionA: Record<string, string> = studentWithRelations.questionnaire
+        ? safeParseJSON((studentWithRelations.questionnaire as any).sectionA)
         : {};
-      const sectionB: Record<string, string> = student.questionnaire
-        ? safeParseJSON(student.questionnaire.sectionB)
+      const sectionB: Record<string, string> = studentWithRelations.questionnaire
+        ? safeParseJSON((studentWithRelations.questionnaire as any).sectionB)
         : {};
-      const sectionC: Record<string, string> = student.questionnaire
-        ? safeParseJSON(student.questionnaire.sectionC)
+      const sectionC: Record<string, string> = studentWithRelations.questionnaire
+        ? safeParseJSON((studentWithRelations.questionnaire as any).sectionC)
         : {};
 
       // Calculate questionnaire-based baseline scores (deterministic, no random)
@@ -285,7 +281,7 @@ export async function POST(req: NextRequest) {
         });
 
         // ---- PASS 1: Analyze each video independently with task-specific prompts ----
-        for (const video of student.videos) {
+        for (const video of (studentWithRelations.videos as any[])) {
           try {
             const videoPath = path.join(process.cwd(), "public", video.filePath);
 
@@ -367,7 +363,7 @@ export async function POST(req: NextRequest) {
 3. Resolve any contradictions between task observations
 4. Calculate final weighted scores
 
-CHILD: ${student.childName}, Age: ${calculateAge(student.dateOfBirth)}
+CHILD: ${(student as any).childName}, Age: ${calculateAge((student as any).dateOfBirth)}
 
 VIDEO OBSERVATIONS FROM ALL TASKS:
 ${videoObservationSummaries.join("\n\n---\n\n")}
@@ -442,7 +438,7 @@ Respond with ONLY the JSON object.`;
       };
 
       // Use TASK4 video for speech analysis; also check other videos for speech
-      const speechVideo = student.videos.find((v) => v.taskType === "TASK4");
+      const speechVideo = (studentWithRelations.videos as any[]).find((v) => v.taskType === "TASK4");
 
       if (speechVideo) {
         try {
@@ -613,8 +609,8 @@ Respond with ONLY the JSON object.`
         const behavioralPrompt = `You are a senior early childhood education assessor with 20+ years of experience in kindergarten readiness evaluation. You are conducting an EDUCATIONAL READINESS ASSESSMENT — this is NOT a medical diagnosis. Use safe, encouraging educational language only.
 
 CHILD PROFILE:
-- Name: ${student.childName}
-- Age: ${calculateAge(student.dateOfBirth)}
+- Name: ${(student as any).childName}
+- Age: ${calculateAge((student as any).dateOfBirth)}
 
 PARENT QUESTIONNAIRE RESPONSES:
 - Attention & Sitting (Section A): ${JSON.stringify(sectionA)}
@@ -695,75 +691,57 @@ Respond with ONLY the JSON object.`;
       // ============================================
       // STEP 4: Save Results with Enhanced Data
       // ============================================
-      await db.aIAnalysis.update({
-        where: { id: analysis.id },
-        data: {
-          sittingScore: videoAnalysisResult.sittingScore,
-          attentionScore: videoAnalysisResult.attentionScore,
-          hyperactivityScore: videoAnalysisResult.hyperactivityScore,
-          emotionalScore: videoAnalysisResult.emotionalScore,
-          instructionScore: videoAnalysisResult.instructionScore,
-          speechClarity: speechResult.speechClarity,
-          vocabularyLevel: speechResult.vocabularyLevel,
-          responseConfidence: speechResult.responseConfidence,
-          responseDelay: speechResult.responseDelay,
-          readinessScore: behavioralResult.readiness_score || 50,
-          attentionLevel: behavioralResult.attention_level || "Moderate",
-          instructionFollowing:
-            behavioralResult.instruction_following || "Moderate",
-          emotionalBehavior:
-            behavioralResult.emotional_behavior ||
-            "No significant concerns observed",
-          socialReadiness: behavioralResult.social_readiness || "Moderate",
-          classroomAdaptability:
-            behavioralResult.classroom_adaptability ||
-            "Adaptable with support",
-          teacherRecommendation:
-            behavioralResult.teacher_recommendation ||
-            "Monitor and provide gentle guidance",
-          riskFlags: JSON.stringify(behavioralResult.risk_flags || []),
-          overallResult: JSON.stringify({
-            ...behavioralResult,
-            video_observations: allVideoObservations,
-            speech_transcription: speechResult.transcription || "Not available",
-            videos_analyzed: videoAnalysisConfidence,
-            total_videos: student.videos.length,
-            analysis_model: "Gemini 2.0 Flash",
-            analysis_version: "2.0",
-          }),
-          analysisStatus: "COMPLETED",
-          videoAnalysisStatus: videoAnalysisConfidence > 0 ? "COMPLETED" : "FAILED",
-          speechAnalysisStatus: speechResult.transcription ? "COMPLETED" : "FAILED",
-          behavioralStatus: "COMPLETED",
-          analyzedAt: new Date(),
-        },
+      await AIAnalysis.findByIdAndUpdate(analysis._id, {
+        sittingScore: videoAnalysisResult.sittingScore,
+        attentionScore: videoAnalysisResult.attentionScore,
+        hyperactivityScore: videoAnalysisResult.hyperactivityScore,
+        emotionalScore: videoAnalysisResult.emotionalScore,
+        instructionScore: videoAnalysisResult.instructionScore,
+        speechClarity: speechResult.speechClarity,
+        vocabularyLevel: speechResult.vocabularyLevel,
+        responseConfidence: speechResult.responseConfidence,
+        responseDelay: speechResult.responseDelay,
+        readinessScore: behavioralResult.readiness_score || 50,
+        attentionLevel: behavioralResult.attention_level || "Moderate",
+        instructionFollowing: behavioralResult.instruction_following || "Moderate",
+        emotionalBehavior: behavioralResult.emotional_behavior || "No significant concerns observed",
+        socialReadiness: behavioralResult.social_readiness || "Moderate",
+        classroomAdaptability: behavioralResult.classroom_adaptability || "Adaptable with support",
+        teacherRecommendation: behavioralResult.teacher_recommendation || "Monitor and provide gentle guidance",
+        riskFlags: JSON.stringify(behavioralResult.risk_flags || []),
+        overallResult: JSON.stringify({
+          ...behavioralResult,
+          video_observations: allVideoObservations,
+          speech_transcription: speechResult.transcription || "Not available",
+          videos_analyzed: videoAnalysisConfidence,
+          total_videos: (studentWithRelations.videos as any[]).length,
+          analysis_model: "Gemini 2.0 Flash",
+          analysis_version: "2.0",
+        }),
+        analysisStatus: "COMPLETED",
+        videoAnalysisStatus: videoAnalysisConfidence > 0 ? "COMPLETED" : "FAILED",
+        speechAnalysisStatus: speechResult.transcription ? "COMPLETED" : "FAILED",
+        behavioralStatus: "COMPLETED",
+        analyzedAt: new Date(),
       });
 
       // Update student status
-      await db.student.update({
-        where: { id: studentId },
-        data: { status: "UNDER_REVIEW" },
-      });
+      await Student.findByIdAndUpdate(studentId, { status: "UNDER_REVIEW" });
 
       // Create notification for the parent
-      await db.notification.create({
-        data: {
-          userId: student.parentId,
-          type: "ADMIN_REVIEW",
-          title: "Assessment Complete",
-          message: `AI analysis for ${student.childName}'s readiness assessment has been completed. The application is now under review.`,
-        },
+      await Notification.create({
+        userId: (student as any).parentId,
+        type: "ADMIN_REVIEW",
+        title: "Assessment Complete",
+        message: `AI analysis for ${(student as any).childName}'s readiness assessment has been completed. The application is now under review.`,
       });
 
-      console.log(`[COMPLETE] Analysis finished for student ${studentId}. Videos analyzed: ${videoAnalysisConfidence}/${student.videos.length}`);
+      console.log(`[COMPLETE] Analysis finished for student ${studentId}. Videos analyzed: ${videoAnalysisConfidence}/${(studentWithRelations.videos as any[]).length}`);
 
       return NextResponse.json({ success: true, result: behavioralResult });
     } catch (analysisError) {
       // Mark analysis as failed
-      await db.aIAnalysis.update({
-        where: { id: analysis.id },
-        data: { analysisStatus: "FAILED" },
-      });
+      await AIAnalysis.findByIdAndUpdate(analysis._id, { analysisStatus: "FAILED" });
       throw analysisError;
     }
   } catch (error) {
