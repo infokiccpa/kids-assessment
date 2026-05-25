@@ -11,6 +11,8 @@ import {
   Sparkles,
   ArrowUpRight,
   Plus,
+  FileText,
+  HelpCircle,
 } from "lucide-react";
 
 const PLATFORMS = [
@@ -104,11 +106,39 @@ const PLATFORMS = [
       accent: "#4D96FF",
     },
   },
+  {
+    num: "07",
+    badge: "Evaluation",
+    title: "Handwritten Answer Sheet Analyzer",
+    desc: "Advanced OCR and AI-assisted marking to grade handwritten student papers and generate automated insights.",
+    url: "eval-ai-xrp7.onrender.com",
+    href: "https://eval-ai-xrp7.onrender.com",
+    icon: FileText,
+    theme: {
+      card: "bg-playful-card-blue hover:border-[#4D96FF]/60 hover:shadow-lg hover:shadow-[#4D96FF]/5",
+      iconBubble: "icon-bubble-blue",
+      badge: "bg-blue-100 text-blue-700 border-blue-200",
+      accent: "#4D96FF",
+    },
+  },
+  {
+    num: "08",
+    badge: "Question Bank",
+    title: "AI-Powered CBSE Question Bank",
+    desc: "Generate standard CBSE questions, customizable practice papers, and solutions dynamically with intelligent scaling.",
+    url: "questionai.space-z.ai",
+    href: "https://questionai.space-z.ai/",
+    icon: HelpCircle,
+    theme: {
+      card: "bg-playful-card-purple hover:border-[#9B59B6]/60 hover:shadow-lg hover:shadow-[#9B59B6]/5",
+      iconBubble: "icon-bubble-purple",
+      badge: "bg-purple-100 text-purple-700 border-purple-200",
+      accent: "#9B59B6",
+    },
+  },
 ];
 
 const PLACEHOLDERS = [
-  { num: "07" },
-  { num: "08" },
   { num: "09" },
 ];
 

@@ -12,6 +12,7 @@ export type AppView =
   | "parent-videos"
   | "parent-review"
   | "parent-results"
+  | "parent-platforms"
   | "admin-dashboard"
   | "admin-students"
   | "admin-student-detail"

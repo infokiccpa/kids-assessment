@@ -30,6 +30,7 @@ const PARENT_VIEWS = [
   "parent-videos",
   "parent-review",
   "parent-results",
+  "parent-platforms",
 ];
 
 // Views that use their own layout (no header/footer)
@@ -67,7 +68,7 @@ export default function Home() {
           const lastView = localStorage.getItem("kinder_assess_last_view");
           const allowedViews = session.user.role === "ADMIN"
             ? ["admin-dashboard", "admin-students", "admin-student-detail", "admin-settings", "admin-platforms"]
-            : ["parent-dashboard", "parent-registration", "parent-questionnaire", "parent-videos", "parent-review", "parent-results"];
+            : ["parent-dashboard", "parent-registration", "parent-questionnaire", "parent-videos", "parent-review", "parent-results", "parent-platforms"];
             
           if (lastView && allowedViews.includes(lastView)) {
             setCurrentView(lastView as any);
@@ -155,6 +156,12 @@ export default function Home() {
         return <Review />;
       case "parent-results":
         return <Results />;
+      case "parent-platforms":
+        return (
+          <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 max-w-7xl animate-bounce-in">
+            <AdminPlatforms />
+          </div>
+        );
       default:
         return <ParentDashboard />;
     }

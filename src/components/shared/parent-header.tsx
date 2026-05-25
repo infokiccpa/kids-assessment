@@ -19,6 +19,7 @@ import {
   FileText,
   Eye,
   X,
+  Sparkles,
 } from "lucide-react";
 
 interface NotificationItem {
@@ -162,10 +163,44 @@ export default function ParentHeader() {
               </div>
             </div>
           )}
+
+          {/* Breadcrumb for Our Platforms */}
+          {currentView === "parent-platforms" && (
+            <div className="hidden sm:flex items-center gap-2 text-sm animate-bounce-in">
+              <ChevronRight className="size-4 text-muted-foreground/50" />
+              <button
+                onClick={() => setCurrentView("parent-dashboard")}
+                className="text-muted-foreground hover:text-[#FF6B6B] transition-colors font-medium"
+              >
+                Dashboard
+              </button>
+              <ChevronRight className="size-4 text-muted-foreground/50" />
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="size-4 text-[#FF6B6B]" />
+                <span className="font-bold text-[#FF6B6B]">
+                  Our Platforms
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right: Notifications + User */}
         <div className="flex items-center gap-3">
+          {/* Our Platforms */}
+          <Button
+            variant="ghost"
+            onClick={() => setCurrentView("parent-platforms")}
+            className={`rounded-xl gap-1.5 text-xs font-bold transition-all px-3 py-2 border-2 ${
+              currentView === "parent-platforms"
+                ? "bg-[#FF6B6B10] border-[#FF6B6B30] text-[#FF6B6B] shadow-sm shadow-[#FF6B6B]/5"
+                : "border-transparent text-muted-foreground hover:text-[#FF6B6B] hover:bg-[#FF6B6B10]"
+            }`}
+          >
+            <Sparkles className="size-4 shrink-0" />
+            <span className="hidden xs:inline">Our Platforms</span>
+          </Button>
+
           {/* Notifications */}
           <Popover open={notifOpen} onOpenChange={setNotifOpen}>
             <PopoverTrigger asChild>
