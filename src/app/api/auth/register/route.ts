@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existingUser = await db.user.findUnique({ where: { email } });
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = await db.user.findUnique({ where: { email: normalizedEmail } });
     if (existingUser) {
       return NextResponse.json(
         { error: "Email already registered" },
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = await db.user.create({
-      data: { email, name, password: hashedPassword, role, phone },
+      data: { email: normalizedEmail, name, password: hashedPassword, role, phone },
     });
 
     return NextResponse.json(
