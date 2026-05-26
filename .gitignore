@@ -46,8 +46,8 @@ dev.out.log
 /db/*.db
 /db/*.db-journal
 
-# Prisma
-/prisma/migrations
+# Legacy Prisma/SQLite (app uses MongoDB only)
+/prisma
 
 # System and IDE Files
 .DS_Store

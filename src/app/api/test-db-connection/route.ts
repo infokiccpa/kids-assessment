@@ -20,10 +20,18 @@ export async function GET() {
   try {
     await connectDB();
     const userCount = await User.countDocuments();
+    const admin = await User.findOne({ email: "admin@school.com" }).select(
+      "email role name"
+    );
     return NextResponse.json({
       success: true,
+      database: "mongodb",
       maskedUri,
       userCount,
+      demoAdminReady: Boolean(admin),
+      demoAdmin: admin
+        ? { email: admin.email, role: admin.role, name: admin.name }
+        : null,
       mongooseState: mongoose.connection.readyState,
       message: "MongoDB connected successfully!",
     });

@@ -28,25 +28,16 @@ export async function connectDB(): Promise<typeof mongoose> {
 
   globalWithMongoose.mongoose.conn = await globalWithMongoose.mongoose.promise;
 
-  // Auto-generate demo admin once per cold start
   if (!globalWithMongoose.mongoose.seeded) {
     globalWithMongoose.mongoose.seeded = true;
     try {
-      const { User } = await import('./models');
-      const bcrypt = (await import('bcryptjs')).default;
-      const adminExists = await User.findOne({ email: 'admin@school.com' });
-      if (!adminExists) {
-        const hashedPassword = await bcrypt.hash('admin123', 10);
-        await User.create({
-          email: 'admin@school.com',
-          name: 'Demo Admin',
-          password: hashedPassword,
-          role: 'ADMIN'
-        });
-        console.log('Demo admin automatically generated.');
+      const { ensureDemoAdmin } = await import("./seed-demo-admin");
+      const result = await ensureDemoAdmin();
+      if (result.created) {
+        console.log("Demo admin automatically generated in MongoDB.");
       }
     } catch (err) {
-      console.error('Failed to generate demo admin:', err);
+      console.error("Failed to generate demo admin:", err);
     }
   }
 
