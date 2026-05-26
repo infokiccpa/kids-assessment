@@ -25,25 +25,25 @@ export default function LoginForm() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const signInWithCredentials = async (
+    loginEmail: string,
+    loginPassword: string
+  ) => {
     setError("");
     setIsLoading(true);
 
     try {
       const result = await signIn("credentials", {
-        email,
-        password,
+        email: loginEmail.trim(),
+        password: loginPassword,
         redirect: false,
       });
 
       if (result?.error) {
         setError("Invalid email or password. Please try again.");
-        setIsLoading(false);
         return;
       }
 
-      // Fetch session to get user info including role
       const sessionRes = await fetch("/api/auth/session");
       const session = await sessionRes.json();
 
@@ -55,7 +55,6 @@ export default function LoginForm() {
           role: (session.user.role as string) || "PARENT",
         });
 
-        // Navigate based on role
         if (session.user.role === "ADMIN") {
           setCurrentView("admin-dashboard");
         } else {
@@ -69,6 +68,19 @@ export default function LoginForm() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await signInWithCredentials(email, password);
+  };
+
+  const handleDemoAdminLogin = async () => {
+    const demoEmail = "admin@school.com";
+    const demoPassword = "admin123";
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    await signInWithCredentials(demoEmail, demoPassword);
   };
 
   return (
@@ -119,15 +131,15 @@ export default function LoginForm() {
               {/* Demo Admin Login Button */}
               <button
                 type="button"
-                onClick={() => {
-                  setEmail("admin@school.com");
-                  setPassword("admin123");
-                }}
-                className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-[#4D96FF]/30 bg-gradient-to-r from-[#4D96FF]/10 to-[#9B59B6]/10 p-3 text-sm font-semibold text-[#3D3028] transition-all duration-200 hover:border-[#4D96FF] hover:shadow-[0_4px_12px_rgba(77,150,255,0.2)] hover:-translate-y-0.5 active:translate-y-0"
+                onClick={handleDemoAdminLogin}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-[#4D96FF]/30 bg-gradient-to-r from-[#4D96FF]/10 to-[#9B59B6]/10 p-3 text-sm font-semibold text-[#3D3028] transition-all duration-200 hover:border-[#4D96FF] hover:shadow-[0_4px_12px_rgba(77,150,255,0.2)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:pointer-events-none"
               >
                 <Shield className="h-4 w-4 text-[#4D96FF]" />
-                Demo Admin Login
-                <span className="text-xs text-[#8B7E74] font-normal ml-1">(click to auto-fill)</span>
+                {isLoading ? "Signing in..." : "Demo Admin Login"}
+                <span className="text-xs text-[#8B7E74] font-normal ml-1">
+                  (one-click)
+                </span>
               </button>
 
               {/* Email */}
