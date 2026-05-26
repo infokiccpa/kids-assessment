@@ -544,6 +544,7 @@ export async function GET(req: NextRequest) {
 
 interface JsPDFWithAutoTable extends jsPDF {
   lastAutoTable: { finalY: number };
+  autoTable: (options: any) => void;
 }
 
 // ============================================

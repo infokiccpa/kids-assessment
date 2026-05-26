@@ -4,7 +4,6 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 // USER MODEL
 // ============================================
 export interface IUser extends Document {
-  _id: string;
   email: string;
   name: string;
   password: string;
@@ -26,7 +25,6 @@ const UserSchema = new Schema<IUser>({
 // STUDENT MODEL
 // ============================================
 export interface IStudent extends Document {
-  _id: string;
   applicationId: string;
   parentId: string;
   childName: string;
@@ -76,7 +74,6 @@ const StudentSchema = new Schema<IStudent>({
 // QUESTIONNAIRE MODEL
 // ============================================
 export interface IQuestionnaire extends Document {
-  _id: string;
   studentId: string;
   sectionA: string;
   sectionB: string;
@@ -98,9 +95,12 @@ const QuestionnaireSchema = new Schema<IQuestionnaire>({
 // VIDEO MODEL
 // ============================================
 export interface IVideo extends Document {
-  _id: string;
   studentId: string;
   taskType: string;
+  // S3 storage fields (new)
+  s3Key: string;       // S3 object key — e.g. videos/studentId/TASK1_ts.webm
+  s3Url: string;       // Pre-signed or public URL for playback
+  // Legacy local path (kept for backward compat — optional)
   filePath: string;
   fileName: string;
   fileSize: number;
@@ -113,7 +113,11 @@ export interface IVideo extends Document {
 const VideoSchema = new Schema<IVideo>({
   studentId: { type: String, required: true },
   taskType: { type: String, required: true },
-  filePath: { type: String, required: true },
+  // S3 storage (new)
+  s3Key: { type: String, default: '' },
+  s3Url: { type: String, default: '' },
+  // Legacy local path (optional, kept for backward compat)
+  filePath: { type: String, default: '' },
   fileName: { type: String, required: true },
   fileSize: { type: Number, default: 0 },
   duration: { type: Number, default: 0 },
@@ -126,7 +130,6 @@ VideoSchema.index({ studentId: 1, taskType: 1 }, { unique: true });
 // AI ANALYSIS MODEL
 // ============================================
 export interface IAIAnalysis extends Document {
-  _id: string;
   studentId: string;
   sittingScore: number;
   attentionScore: number;
@@ -186,7 +189,6 @@ const AIAnalysisSchema = new Schema<IAIAnalysis>({
 // REPORT MODEL
 // ============================================
 export interface IReport extends Document {
-  _id: string;
   studentId: string;
   filePath: string;
   generatedAt: Date;
@@ -204,7 +206,6 @@ const ReportSchema = new Schema<IReport>({
 // NOTIFICATION MODEL
 // ============================================
 export interface INotification extends Document {
-  _id: string;
   userId: string;
   type: string;
   title: string;
@@ -225,7 +226,6 @@ const NotificationSchema = new Schema<INotification>({
 // ADMIN NOTE MODEL
 // ============================================
 export interface IAdminNote extends Document {
-  _id: string;
   studentId: string;
   adminId: string;
   note: string;

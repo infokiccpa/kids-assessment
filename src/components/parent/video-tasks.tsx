@@ -64,6 +64,8 @@ interface TaskState {
   status: UploadStatus;
   progress: number;
   fileName: string;
+  fileSize: number;
+  duration: number;
   previewUrl: string | null;
 }
 
@@ -77,10 +79,10 @@ const TASK_COLORS: Record<string, { border: string; numberBg: string; numberText
 export default function VideoTasks() {
   const { currentStudentId, setCurrentView } = useAppStore();
   const [taskStates, setTaskStates] = useState<Record<string, TaskState>>({
-    TASK1: { status: "pending", progress: 0, fileName: "", previewUrl: null },
-    TASK2: { status: "pending", progress: 0, fileName: "", previewUrl: null },
-    TASK3: { status: "pending", progress: 0, fileName: "", previewUrl: null },
-    TASK4: { status: "pending", progress: 0, fileName: "", previewUrl: null },
+    TASK1: { status: "pending", progress: 0, fileName: "", fileSize: 0, duration: 0, previewUrl: null },
+    TASK2: { status: "pending", progress: 0, fileName: "", fileSize: 0, duration: 0, previewUrl: null },
+    TASK3: { status: "pending", progress: 0, fileName: "", fileSize: 0, duration: 0, previewUrl: null },
+    TASK4: { status: "pending", progress: 0, fileName: "", fileSize: 0, duration: 0, previewUrl: null },
   });
   const [error, setError] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -104,7 +106,9 @@ export default function VideoTasks() {
                     status: "uploaded",
                     progress: 100,
                     fileName: video.fileName,
-                    previewUrl: video.filePath,
+                    fileSize: video.fileSize || 0,
+                    duration: video.duration || 0,
+                    previewUrl: video.s3Url || video.filePath || null,
                   };
                 }
               }
@@ -134,6 +138,18 @@ export default function VideoTasks() {
     // Create preview URL
     const previewUrl = URL.createObjectURL(file);
 
+    // Get video duration via HTMLVideoElement
+    let videoDuration = 0;
+    try {
+      videoDuration = await new Promise<number>((resolve) => {
+        const vid = document.createElement("video");
+        vid.preload = "metadata";
+        vid.onloadedmetadata = () => resolve(Math.round(vid.duration));
+        vid.onerror = () => resolve(0);
+        vid.src = previewUrl;
+      });
+    } catch { videoDuration = 0; }
+
     // Set uploading state
     setTaskStates((prev) => ({
       ...prev,
@@ -141,6 +157,8 @@ export default function VideoTasks() {
         status: "uploading",
         progress: 0,
         fileName: file.name,
+        fileSize: file.size,
+        duration: videoDuration,
         previewUrl,
       },
     }));
@@ -169,6 +187,10 @@ export default function VideoTasks() {
       formData.append("studentId", currentStudentId);
       formData.append("taskType", taskType);
       formData.append("video", file);
+      // Send browser-measured duration so backend can store it
+      if (videoDuration > 0) {
+        formData.append("duration", String(videoDuration));
+      }
 
       const res = await fetch("/api/videos", {
         method: "POST",
@@ -370,21 +392,42 @@ export default function VideoTasks() {
                   </div>
                 )}
 
-                {/* Video Preview - Rounded corners and subtle shadow */}
+                {/* Video Preview with duration and size */}
                 {state.status === "uploaded" && state.previewUrl && (
-                  <div className="relative rounded-2xl overflow-hidden bg-black/5 shadow-lg ring-2 ring-[#6BCB77]/30">
-                    <video
-                      src={state.previewUrl}
-                      className="w-full max-h-48 object-contain rounded-2xl"
-                      controls
-                    >
-                      <track kind="captions" />
-                    </video>
-                    <div className="absolute top-2 right-2">
-                      <Badge className="badge-3d bg-[#6BCB77] text-white border-none text-xs">
-                        <CheckCircle2 className="size-3 mr-1" />
-                        Done
-                      </Badge>
+                  <div className="space-y-2">
+                    <div className="relative rounded-2xl overflow-hidden bg-black/5 shadow-lg ring-2 ring-[#6BCB77]/30">
+                      <video
+                        src={state.previewUrl}
+                        className="w-full max-h-48 object-contain rounded-2xl"
+                        controls
+                      >
+                        <track kind="captions" />
+                      </video>
+                      <div className="absolute top-2 right-2">
+                        <Badge className="badge-3d bg-[#6BCB77] text-white border-none text-xs">
+                          <CheckCircle2 className="size-3 mr-1" />
+                          Done
+                        </Badge>
+                      </div>
+                    </div>
+                    {/* Duration and Size badges */}
+                    <div className="flex gap-2 flex-wrap">
+                      {state.duration > 0 && (
+                        <Badge className="badge-3d bg-[#4D96FF]/15 text-[#2980B9] border-[#4D96FF]/30 text-xs gap-1">
+                          <Clock className="size-3" />
+                          {state.duration >= 60
+                            ? `${Math.floor(state.duration / 60)}m ${state.duration % 60}s`
+                            : `${state.duration}s`}
+                        </Badge>
+                      )}
+                      {state.fileSize > 0 && (
+                        <Badge className="badge-3d bg-[#9B59B6]/15 text-[#8E44AD] border-[#9B59B6]/30 text-xs gap-1">
+                          <FileVideo className="size-3" />
+                          {state.fileSize >= 1024 * 1024
+                            ? `${(state.fileSize / 1024 / 1024).toFixed(1)} MB`
+                            : `${(state.fileSize / 1024).toFixed(0)} KB`}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 )}

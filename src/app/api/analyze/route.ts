@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { Student, AIAnalysis, Notification } from "@/lib/models";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import fs from "fs";
-import path from "path";
+import { downloadFromS3 } from "@/lib/s3";
+
+// Allow up to 5 minutes for this route (AI analysis can be slow)
+export const maxDuration = 300;
+
 
 // Initialize Gemini client
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
@@ -263,86 +266,105 @@ export async function POST(req: NextRequest) {
 
       // ============================================
       // STEP 1: Multi-Pass Video Analysis using Gemini VLM
+      //   Enhancement: Videos analyzed IN PARALLEL (Promise.allSettled)
+      //   Enhancement: Size cap raised 20MB → 80MB
+      //   Enhancement: TASK4 VLM result captures transcription to avoid
+      //                reloading the same file in the speech step
       // ============================================
       let videoAnalysisResult = { ...questionnaireScores };
       const allVideoObservations: Record<string, Record<string, unknown>> = {};
       const videoObservationSummaries: string[] = [];
-      let videoAnalysisConfidence = 0; // Track how many videos were successfully analyzed
+      let videoAnalysisConfidence = 0;
+      // Will be populated from TASK4 VLM observation to skip redundant file reload
+      let task4TranscriptionFromVLM = "";
 
       try {
-        const MAX_VIDEO_SIZE_BYTES = 20 * 1024 * 1024; // 20MB limit (Gemini supports larger)
+        const MAX_VIDEO_SIZE_BYTES = 80 * 1024 * 1024; // 80MB — Gemini supports inline up to ~1GB
         const vlmModel = genAI.getGenerativeModel({
           model: FLASH_MODEL,
           generationConfig: {
-            temperature: 0.2, // Low temperature for more consistent/deterministic analysis
+            temperature: 0.2,
             topP: 0.8,
             maxOutputTokens: 2048,
           },
         });
 
-        // ---- PASS 1: Analyze each video independently with task-specific prompts ----
-        for (const video of (studentWithRelations.videos as any[])) {
+        // ---- PASS 1: Analyze ALL videos IN PARALLEL ----
+        // Each video is processed concurrently; failures are isolated via allSettled.
+        console.log(`[PASS 1] Analyzing ${(studentWithRelations.videos as any[]).length} videos in parallel...`);
+
+        const videoAnalysisTasks = (studentWithRelations.videos as any[]).map(async (video) => {
+          // Determine S3 key — new uploads use s3Key; legacy uploads fall back to filePath
+          const s3Key: string | undefined = video.s3Key;
+          if (!s3Key) {
+            console.warn(`[PASS 1] ${video.taskType}: no s3Key found — skipping (legacy local video)`);
+            return null;
+          }
+
+          let videoBuffer: Buffer;
           try {
-            const videoPath = path.join(process.cwd(), "public", video.filePath);
+            videoBuffer = await downloadFromS3(s3Key);
+          } catch (dlErr) {
+            console.error(`[PASS 1] ${video.taskType}: S3 download failed:`, dlErr);
+            return null;
+          }
 
-            if (!fs.existsSync(videoPath)) {
-              console.warn(`Video file not found: ${videoPath}`);
-              continue;
-            }
+          if (videoBuffer.length > MAX_VIDEO_SIZE_BYTES) {
+            console.warn(`[PASS 1] Skipping VLM for ${video.taskType}: file too large (${(videoBuffer.length / 1024 / 1024).toFixed(1)}MB > 80MB)`);
+            return null;
+          }
 
-            const videoBuffer = fs.readFileSync(videoPath);
+          const base64Video = videoBuffer.toString("base64");
+          // Derive mime type from the S3 key extension
+          const ext = (s3Key.split(".").pop() ?? "webm").toLowerCase();
+          const mimeType = getVideoMimeType(ext);
+          const taskPrompt = getTaskSpecificVLMPrompt(video.taskType);
 
-            // Skip videos that are too large
-            if (videoBuffer.length > MAX_VIDEO_SIZE_BYTES) {
-              console.log(`Skipping VLM for ${video.taskType}: video too large (${(videoBuffer.length / 1024 / 1024).toFixed(1)}MB)`);
-              continue;
-            }
+          console.log(`[PASS 1] → ${video.taskType} started (${(videoBuffer.length / 1024 / 1024).toFixed(1)}MB from S3)`);
 
-            const base64Video = videoBuffer.toString("base64");
-            const ext = video.filePath.split(".").pop()?.toLowerCase() || "webm";
-            const mimeType = getVideoMimeType(ext);
-            const taskPrompt = getTaskSpecificVLMPrompt(video.taskType);
+          const vlmResult = await withRetry(async () =>
+            vlmModel.generateContent([
+              { inlineData: { data: base64Video, mimeType } },
+              { text: taskPrompt.system + "\n\n" + taskPrompt.user },
+            ])
+          );
 
-            console.log(`[PASS 1] Analyzing ${video.taskType} with task-specific prompt...`);
+          const vlmText = vlmResult.response.text();
+          const parsedObs = extractJSON(vlmText);
 
-            const vlmResult = await withRetry(async () => {
-              const result = await vlmModel.generateContent([
-                {
-                  inlineData: {
-                    data: base64Video,
-                    mimeType: mimeType,
-                  },
-                },
-                {
-                  text: taskPrompt.system + "\n\n" + taskPrompt.user,
-                },
-              ]);
-              return result;
-            });
+          if (parsedObs) {
+            console.log(`[PASS 1] ✓ ${video.taskType} done. Confidence: ${parsedObs.confidence_level ?? "unknown"}`);
+            return { taskType: video.taskType as string, obs: parsedObs, rawText: "" };
+          } else {
+            console.warn(`[PASS 1] ✗ ${video.taskType} — could not parse JSON, using raw text`);
+            return { taskType: video.taskType as string, obs: null, rawText: vlmText.substring(0, 600) };
+          }
+        });
 
-            const vlmText = vlmResult.response.text();
-            const parsedObs = extractJSON(vlmText);
+        const passOneResults = await Promise.allSettled(videoAnalysisTasks);
 
-            if (parsedObs) {
-              allVideoObservations[video.taskType] = parsedObs;
+        for (const settled of passOneResults) {
+          if (settled.status === "fulfilled" && settled.value) {
+            const { taskType, obs, rawText } = settled.value;
+            if (obs) {
+              allVideoObservations[taskType] = obs;
               videoAnalysisConfidence++;
-              videoObservationSummaries.push(
-                `[${video.taskType}]: ${JSON.stringify(parsedObs, null, 2)}`
-              );
-              console.log(`[PASS 1] ${video.taskType} analysis complete. Confidence: ${parsedObs.confidence_level || "unknown"}`);
-            } else {
-              console.warn(`[PASS 1] ${video.taskType} - Could not parse VLM JSON response, using raw text`);
-              videoObservationSummaries.push(`[${video.taskType}]: ${vlmText.substring(0, 500)}`);
+              videoObservationSummaries.push(`[${taskType}]: ${JSON.stringify(obs, null, 2)}`);
+              // Capture TASK4 transcription from VLM to avoid reloading the file
+              if (taskType === "TASK4" && typeof obs.transcription === "string" && obs.transcription.length > 0) {
+                task4TranscriptionFromVLM = obs.transcription;
+              }
+            } else if (rawText) {
+              videoObservationSummaries.push(`[${taskType}]: ${rawText}`);
             }
-          } catch (videoErr) {
-            console.error(
-              `[PASS 1] VLM analysis failed for video ${video.taskType}:`,
-              videoErr instanceof Error ? videoErr.message : videoErr
-            );
+          } else if (settled.status === "rejected") {
+            console.error(`[PASS 1] Video analysis rejected:`, settled.reason);
           }
         }
 
-        // ---- PASS 2: Cross-validate and merge observations across all videos ----
+        console.log(`[PASS 1] Complete: ${videoAnalysisConfidence}/${(studentWithRelations.videos as any[]).length} videos analyzed successfully.`);
+
+        // ---- PASS 2: Cross-validate observations across all videos ----
         if (Object.keys(allVideoObservations).length > 0) {
           try {
             console.log("[PASS 2] Cross-validating observations across all videos...");
@@ -356,14 +378,21 @@ export async function POST(req: NextRequest) {
               },
             });
 
-            const crossValidationPrompt = `You are a senior early childhood assessment specialist. You have received video observation data from multiple tasks performed by the same kindergarten-age child. Your job is to:
+            const crossValidationPrompt = `You are a senior early childhood assessment specialist. You have received video observation data from ${Object.keys(allVideoObservations).length} tasks performed by the same kindergarten-age child. Your job is to:
 
 1. Cross-validate observations — do behaviors seen in one task correlate with other tasks?
 2. Identify consistent patterns vs. one-off behaviors
 3. Resolve any contradictions between task observations
 4. Calculate final weighted scores
 
-CHILD: ${(student as any).childName}, Age: ${calculateAge((student as any).dateOfBirth)}
+CHILD PROFILE:
+- Name: ${(student as any).childName}
+- Age: ${calculateAge((student as any).dateOfBirth)}
+- Gender: ${(student as any).gender || "Not specified"}
+- Languages Spoken: ${(student as any).languagesSpoken || "Not specified"}
+- Nationality: ${(student as any).nationality || "Not specified"}
+
+NOTE: Consider the child's language background when evaluating speech tasks. Non-native speakers may show lower confidence in verbal tasks even if cognitively capable.
 
 VIDEO OBSERVATIONS FROM ALL TASKS:
 ${videoObservationSummaries.join("\n\n---\n\n")}
@@ -376,10 +405,12 @@ QUESTIONNAIRE BASELINE SCORES (from parent):
 - Instruction Following: ${questionnaireScores.instructionScore.toFixed(1)}
 
 CROSS-VALIDATION RULES:
-- If video observations strongly contradict questionnaire, trust the VIDEO (weight: video 65%, questionnaire 35%)
-- If video observations are consistent with questionnaire, strengthen the score
-- If only some videos were analyzed, weight those more heavily
-- Consider the confidence_level reported in each observation
+- Trust VIDEO over questionnaire when contradicted (video weight: 65%, questionnaire: 35%)
+- If observations are consistent, reinforce the score
+- Weight tasks by their relevance: TASK1→sitting/attention, TASK2→instruction, TASK3→emotional, TASK4→speech/confidence
+- Account for task difficulty: TASK2 (3-step instruction) is harder than TASK4 (self-introduction)
+- A single poor score in one task should NOT drag down unrelated dimensions
+- Consider the overall_video_confidence per task observation when weighting
 
 Provide your cross-validated analysis as a JSON object:
 {
@@ -388,46 +419,46 @@ Provide your cross-validated analysis as a JSON object:
   "hyperactivity_score": <1-10, cross-validated, higher=less hyperactive>,
   "emotional_regulation_score": <1-10, cross-validated>,
   "instruction_following_score": <1-10, cross-validated>,
-  "cross_validation_notes": "<brief explanation of how scores were derived>",
+  "cross_validation_notes": "<how scores were derived, what contradictions were resolved>",
   "consistent_patterns": ["behaviors seen consistently across multiple tasks"],
-  "contradictions_resolved": ["how contradictions between tasks/questionnaire were resolved"],
-  "overall_video_confidence": "<High|Medium|Low>"
+  "contradictions_resolved": ["specific contradictions between tasks or questionnaire and how resolved"],
+  "overall_video_confidence": "<High|Medium|Low>",
+  "tasks_used": ["list of taskTypes successfully used in this analysis"]
 }
 
 Respond with ONLY the JSON object.`;
 
-            const crossResult = await withRetry(async () => {
-              return await crossValidationModel.generateContent(crossValidationPrompt);
-            });
+            const crossResult = await withRetry(async () =>
+              crossValidationModel.generateContent(crossValidationPrompt)
+            );
 
-            const crossText = crossResult.response.text();
-            const crossParsed = extractJSON(crossText);
+            const crossParsed = extractJSON(crossResult.response.text());
 
             if (crossParsed) {
-              // Apply cross-validated scores
               if (crossParsed.sitting_score != null) videoAnalysisResult.sittingScore = clampScore(crossParsed.sitting_score as number);
               if (crossParsed.attention_score != null) videoAnalysisResult.attentionScore = clampScore(crossParsed.attention_score as number);
               if (crossParsed.hyperactivity_score != null) videoAnalysisResult.hyperactivityScore = clampScore(crossParsed.hyperactivity_score as number);
               if (crossParsed.emotional_regulation_score != null) videoAnalysisResult.emotionalScore = clampScore(crossParsed.emotional_regulation_score as number);
               if (crossParsed.instruction_following_score != null) videoAnalysisResult.instructionScore = clampScore(crossParsed.instruction_following_score as number);
-
-              console.log(`[PASS 2] Cross-validation complete. Overall confidence: ${crossParsed.overall_video_confidence || "unknown"}`);
+              console.log(`[PASS 2] Cross-validation complete. Confidence: ${crossParsed.overall_video_confidence ?? "unknown"}. Tasks used: ${(crossParsed.tasks_used as string[] | undefined)?.join(", ") ?? "unknown"}`);
             } else {
-              // Fallback: derive scores directly from individual video observations
-              console.warn("[PASS 2] Could not parse cross-validation JSON, deriving from individual observations");
+              console.warn("[PASS 2] Could not parse cross-validation JSON — falling back to individual observation derivation");
               videoAnalysisResult = deriveScoresFromObservations(allVideoObservations, questionnaireScores);
             }
           } catch (crossErr) {
-            console.error("[PASS 2] Cross-validation failed, deriving from individual observations:", crossErr);
+            console.error("[PASS 2] Cross-validation failed:", crossErr);
             videoAnalysisResult = deriveScoresFromObservations(allVideoObservations, questionnaireScores);
           }
         }
       } catch (vlmError) {
-        console.error("VLM analysis error, using questionnaire-based scores:", vlmError);
+        console.error("[PASS 1] VLM outer error — using questionnaire baseline scores:", vlmError);
       }
 
       // ============================================
       // STEP 2: Enhanced Speech Analysis
+      //   Enhancement: If TASK4 VLM already captured a transcription in
+      //   Pass 1 (via the `transcription` field in the prompt response),
+      //   we reuse it directly — no need to reload the video file.
       // ============================================
       let speechResult = {
         speechClarity: calculateSpeechScore(sectionC),
@@ -437,43 +468,34 @@ Respond with ONLY the JSON object.`;
         transcription: "",
       };
 
-      // Use TASK4 video for speech analysis; also check other videos for speech
       const speechVideo = (studentWithRelations.videos as any[]).find((v) => v.taskType === "TASK4");
 
       if (speechVideo) {
         try {
-          const videoPath = path.join(
-            process.cwd(),
-            "public",
-            speechVideo.filePath
-          );
+          // OPTIMISATION: use transcription captured during Pass 1 VLM if available
+          let rawTranscription = task4TranscriptionFromVLM;
 
-          if (fs.existsSync(videoPath)) {
-            const audioBuffer = fs.readFileSync(videoPath);
-            const base64Audio = audioBuffer.toString("base64");
-            const ext = speechVideo.filePath.split(".").pop()?.toLowerCase() || "webm";
-            const mimeType = getVideoMimeType(ext);
+          if (!rawTranscription) {
+            // Fallback: download TASK4 from S3 for transcription
+            const s3Key: string | undefined = speechVideo.s3Key;
+            if (s3Key) {
+              try {
+                const audioBuffer = await downloadFromS3(s3Key);
+                const ext = (s3Key.split(".").pop() ?? "webm").toLowerCase();
+                const mimeType = getVideoMimeType(ext);
 
-            // ---- PASS 1: Transcribe with Gemini ----
-            console.log("[SPEECH] Transcribing TASK4 audio/video...");
+                console.log("[SPEECH] TASK4 transcription not captured in Pass 1 — transcribing from S3...");
 
-            const asrModel = genAI.getGenerativeModel({
-              model: FLASH_MODEL,
-              generationConfig: {
-                temperature: 0.1, // Very low temperature for transcription accuracy
-              },
-            });
+                const asrModel = genAI.getGenerativeModel({
+                  model: FLASH_MODEL,
+                  generationConfig: { temperature: 0.1 },
+                });
 
-            const asrResult = await withRetry(async () => {
-              return await asrModel.generateContent([
-                {
-                  inlineData: {
-                    data: base64Audio,
-                    mimeType: mimeType,
-                  },
-                },
-                {
-                  text: `You are a professional transcriptionist for children's speech. Transcribe EXACTLY what the child says in this video. 
+                const asrResult = await withRetry(async () =>
+                  asrModel.generateContent([
+                    { inlineData: { data: audioBuffer.toString("base64"), mimeType } },
+                    {
+                      text: `You are a professional transcriptionist for children's speech. Transcribe EXACTLY what the child says in this video.
 
 RULES:
 - Only transcribe the CHILD's speech, not adults
@@ -483,37 +505,44 @@ RULES:
 - Mark non-verbal vocalizations as [giggle], [sigh], etc.
 - If the child does not speak, respond with exactly: NO_SPEECH_DETECTED
 - Do NOT add any commentary, analysis, or notes — ONLY the transcription`,
-                },
-              ]);
-            });
+                    },
+                  ])
+                );
 
-            const rawTranscription = asrResult.response.text().trim();
+                rawTranscription = asrResult.response.text().trim();
+                if (rawTranscription === "NO_SPEECH_DETECTED") rawTranscription = "";
+              } catch (dlErr) {
+                console.error("[SPEECH] S3 download for transcription failed:", dlErr);
+              }
+            } else {
+              console.warn("[SPEECH] No s3Key for TASK4 — cannot transcribe.");
+            }
+          } else {
+            console.log("[SPEECH] Reusing transcription captured from TASK4 VLM Pass 1 — skipping file reload.");
+          }
 
-            if (rawTranscription && rawTranscription !== "NO_SPEECH_DETECTED" && rawTranscription.length > 0) {
-              speechResult.transcription = rawTranscription;
+          if (rawTranscription && rawTranscription.length > 0) {
+            speechResult.transcription = rawTranscription;
 
-              // ---- PASS 2: Deep speech quality analysis ----
-              try {
-                console.log("[SPEECH] Running deep speech quality analysis...");
+            // ---- Deep speech quality analysis ----
+            try {
+              console.log("[SPEECH] Running deep speech quality analysis...");
 
-                const speechModel = genAI.getGenerativeModel({
-                  model: PRO_MODEL,
-                  generationConfig: {
-                    temperature: 0.15,
-                    topP: 0.8,
-                    maxOutputTokens: 1024,
-                  },
-                });
+              const speechModel = genAI.getGenerativeModel({
+                model: PRO_MODEL,
+                generationConfig: { temperature: 0.15, topP: 0.8, maxOutputTokens: 1024 },
+              });
 
-                // Check if TASK4 VLM observation already has speech metrics
-                const task4Obs = allVideoObservations["TASK4"];
-                const task4SpeechContext = task4Obs
-                  ? `\n\nVideo Observer's Speech Notes: ${JSON.stringify(task4Obs, null, 2)}`
-                  : "";
+              const task4Obs = allVideoObservations["TASK4"];
+              const task4SpeechContext = task4Obs
+                ? `\n\nVideo Observer's Notes (behavioral + speech): ${JSON.stringify(task4Obs, null, 2)}`
+                : "";
 
-                const speechAnalysisResponse = await withRetry(async () => {
-                  return await speechModel.generateContent(
-                    `You are a pediatric speech-language pathologist with 15+ years of experience assessing kindergarten-age children. You are performing an EDUCATIONAL observation, NOT a medical diagnosis. Use safe educational readiness language only.
+              const speechAnalysisResponse = await withRetry(async () =>
+                speechModel.generateContent(
+                  `You are a pediatric speech-language pathologist with 15+ years of experience assessing kindergarten-age children. You are performing an EDUCATIONAL observation, NOT a medical diagnosis. Use safe educational readiness language only.
+
+CHILD LANGUAGE CONTEXT: Languages spoken: ${(student as any).languagesSpoken || "Not specified"}
 
 TRANSCRIPTION OF CHILD'S SELF-INTRODUCTION:
 "${rawTranscription}"
@@ -541,42 +570,40 @@ IMPORTANT SCORING GUIDELINES:
 - Scores below 4 indicate the child may benefit from additional support
 - Scores above 8 indicate strong age-appropriate development
 - Do NOT score harshly for minor articulation errors (normal for age)
-- Consider cultural and linguistic background variations
+- If child is multilingual, adjust expectations for vocabulary score accordingly
+- Consider cultural background when assessing social communication norms
 
 Respond with ONLY the JSON object.`
-                  );
-                });
+                )
+              );
 
-                const speechText = speechAnalysisResponse.response.text();
-                const speechParsed = extractJSON(speechText);
+              const speechParsed = extractJSON(speechAnalysisResponse.response.text());
 
-                if (speechParsed) {
-                  if (speechParsed.speech_clarity != null)
-                    speechResult.speechClarity = clampScore(speechParsed.speech_clarity as number);
-                  if (speechParsed.vocabulary_level != null)
-                    speechResult.vocabularyLevel = clampScore(speechParsed.vocabulary_level as number);
-                  if (speechParsed.speaking_confidence != null)
-                    speechResult.responseConfidence = clampScore(speechParsed.speaking_confidence as number);
-                  if (speechParsed.estimated_response_delay_seconds != null)
-                    speechResult.responseDelay = Math.max(0.5, Math.min(8, speechParsed.estimated_response_delay_seconds as number));
-                }
-              } catch (speechAnalysisErr) {
-                console.error("Deep speech analysis failed, using heuristic:", speechAnalysisErr);
-                // Deterministic heuristic: no random
-                const wordCount = rawTranscription.split(/\s+/).filter(w => w.length > 0 && !w.startsWith("[")).length;
-                if (wordCount > 20) {
-                  speechResult.speechClarity = Math.min(10, speechResult.speechClarity + 1.5);
-                  speechResult.vocabularyLevel = Math.min(10, 6 + wordCount * 0.1);
-                  speechResult.responseConfidence = Math.min(10, 6 + wordCount * 0.08);
-                } else if (wordCount > 10) {
-                  speechResult.speechClarity = Math.min(10, speechResult.speechClarity + 0.5);
-                  speechResult.vocabularyLevel = Math.min(10, 5 + wordCount * 0.1);
-                }
+              if (speechParsed) {
+                if (speechParsed.speech_clarity != null)
+                  speechResult.speechClarity = clampScore(speechParsed.speech_clarity as number);
+                if (speechParsed.vocabulary_level != null)
+                  speechResult.vocabularyLevel = clampScore(speechParsed.vocabulary_level as number);
+                if (speechParsed.speaking_confidence != null)
+                  speechResult.responseConfidence = clampScore(speechParsed.speaking_confidence as number);
+                if (speechParsed.estimated_response_delay_seconds != null)
+                  speechResult.responseDelay = Math.max(0.5, Math.min(8, speechParsed.estimated_response_delay_seconds as number));
+              }
+            } catch (speechAnalysisErr) {
+              console.error("[SPEECH] Deep analysis failed, using word-count heuristic:", speechAnalysisErr);
+              const wordCount = rawTranscription.split(/\s+/).filter((w) => w.length > 0 && !w.startsWith("[")).length;
+              if (wordCount > 20) {
+                speechResult.speechClarity = Math.min(10, speechResult.speechClarity + 1.5);
+                speechResult.vocabularyLevel = Math.min(10, 6 + wordCount * 0.1);
+                speechResult.responseConfidence = Math.min(10, 6 + wordCount * 0.08);
+              } else if (wordCount > 10) {
+                speechResult.speechClarity = Math.min(10, speechResult.speechClarity + 0.5);
+                speechResult.vocabularyLevel = Math.min(10, 5 + wordCount * 0.1);
               }
             }
           }
         } catch (asrError) {
-          console.error("ASR transcription failed:", asrError);
+          console.error("[SPEECH] Transcription step failed:", asrError);
         }
       }
 
@@ -801,15 +828,7 @@ function getVideoMimeType(ext: string): string {
   return mimeTypes[ext] || "video/webm";
 }
 
-function getTaskDescription(taskType: string): string {
-  const descriptions: Record<string, string> = {
-    TASK1: "Sitting Ability - Child is asked to sit and color/draw for 3 minutes",
-    TASK2: "Instruction Following - Child is asked to pick a red object, place it on a table, and clap hands twice",
-    TASK3: "Emotional Response - Parent leaves the room for 30 seconds",
-    TASK4: "Self Introduction - Child is asked their name, age, and favorite color",
-  };
-  return descriptions[taskType] || "Kindergarten readiness task";
-}
+// getTaskDescription was previously defined here but unused — removed.
 
 // ============================================
 // Derive scores from individual video observations

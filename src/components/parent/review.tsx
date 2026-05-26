@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAppStore } from "@/store/app-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Loader2,
   CheckCircle2,
@@ -17,6 +16,10 @@ import {
   ChevronLeft,
   Heart,
   Users,
+  FileCheck,
+  Scan,
+  Mic,
+  BarChart3,
 } from "lucide-react";
 
 interface StudentData {
@@ -42,6 +45,7 @@ interface StudentData {
     taskType: string;
     fileName: string;
     fileSize: number;
+    duration: number;
     uploadedAt: string;
   }[];
   aiAnalysis: {
@@ -63,6 +67,244 @@ const TASK_VIDEO_COLORS: Record<string, string> = {
   TASK4: "#4D96FF",
 };
 
+const TASK_ICONS: Record<string, React.ReactNode> = {
+  TASK1: <Scan className="size-4" />,
+  TASK2: <Brain className="size-4" />,
+  TASK3: <Heart className="size-4" />,
+  TASK4: <Mic className="size-4" />,
+};
+
+// ============================================================
+// Step-by-step animated analysis screen
+// ============================================================
+function AnalysisAnimation({
+  videos,
+  childName,
+}: {
+  videos: StudentData["videos"];
+  childName: string;
+}) {
+  // Build steps: one per video, then speech, then behavioral, then report
+  const videoSteps = videos.map((v) => ({
+    key: v.taskType,
+    label: `Aapke bachche ka "${TASK_LABELS[v.taskType]}" video analyze kiya ja raha hai`,
+    subLabel: v.fileName,
+    icon: TASK_ICONS[v.taskType] || <Scan className="size-4" />,
+    color: TASK_VIDEO_COLORS[v.taskType] || "#4D96FF",
+  }));
+
+  const extraSteps = [
+    {
+      key: "speech",
+      label: "Baat-cheet aur bhaasha ka vishleshan ho raha hai",
+      subLabel: "Speech clarity, vocabulary, confidence...",
+      icon: <Mic className="size-4" />,
+      color: "#9B59B6",
+    },
+    {
+      key: "behavioral",
+      label: "Sampoorna vyavaharik report taiyar ki ja rahi hai",
+      subLabel: "Readiness score, behavioral assessment...",
+      icon: <BarChart3 className="size-4" />,
+      color: "#FEC163",
+    },
+    {
+      key: "report",
+      label: "Antim report tayar ho rahi hai!",
+      subLabel: `${childName} ki poori assessment complete ho rahi hai`,
+      icon: <FileCheck className="size-4" />,
+      color: "#6BCB77",
+    },
+  ];
+
+  const allSteps = [...videoSteps, ...extraSteps];
+
+  // Durations (ms) per step — generous to match real AI time
+  const stepDurations = [
+    ...videos.map(() => 28000),   // ~28s per video
+    14000,                         // speech
+    12000,                         // behavioral
+    8000,                          // report
+  ];
+
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [dotCount, setDotCount] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Animated dots
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDotCount((d) => (d + 1) % 4);
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Step progression
+  useEffect(() => {
+    if (currentStep >= allSteps.length) return;
+    const duration = stepDurations[currentStep] ?? 15000;
+    timerRef.current = setTimeout(() => {
+      setCompletedSteps((prev) => new Set([...prev, currentStep]));
+      setCurrentStep((s) => s + 1);
+    }, duration);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep]);
+
+  const dots = ".".repeat(dotCount);
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-10">
+      {/* Header */}
+      <div className="text-center mb-10">
+        <div className="relative inline-block mb-5">
+          <div className="size-24 rounded-full bg-gradient-to-br from-[#FF6B6B] via-[#FEC163] to-[#6BCB77] flex items-center justify-center shadow-2xl animate-pulse">
+            <Brain className="size-12 text-white" />
+          </div>
+          {/* Orbiting dot */}
+          <div
+            className="absolute size-4 rounded-full bg-[#4D96FF] shadow-lg"
+            style={{
+              top: "50%",
+              left: "50%",
+              animation: "orbit 2s linear infinite",
+              transformOrigin: "0 0",
+            }}
+          />
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-black rainbow-text mb-2">
+          AI Analysis Chal Raha Hai
+        </h1>
+        <p className="text-muted-foreground font-medium text-sm">
+          Kripaya pratiksha karein — yeh kuch minute le sakta hai
+        </p>
+      </div>
+
+      {/* Steps */}
+      <div className="space-y-3 mb-8">
+        {allSteps.map((step, idx) => {
+          const isCompleted = completedSteps.has(idx);
+          const isActive = currentStep === idx;
+          const isPending = idx > currentStep;
+
+          return (
+            <div
+              key={step.key}
+              className={`relative flex items-center gap-4 rounded-2xl px-4 py-3.5 border-2 transition-all duration-500 ${
+                isCompleted
+                  ? "border-[#6BCB77]/40 bg-[#6BCB77]/10 opacity-80"
+                  : isActive
+                  ? "border-opacity-60 shadow-lg scale-[1.02]"
+                  : "border-transparent bg-muted/30 opacity-40"
+              }`}
+              style={
+                isActive
+                  ? { borderColor: step.color + "60", background: step.color + "12" }
+                  : {}
+              }
+            >
+              {/* Icon bubble */}
+              <div
+                className={`size-10 rounded-xl flex items-center justify-center shrink-0 shadow-md text-white transition-all duration-300 ${
+                  isActive ? "animate-bounce" : ""
+                }`}
+                style={{
+                  background: isCompleted
+                    ? "#6BCB77"
+                    : isPending
+                    ? "#CBD5E1"
+                    : step.color,
+                }}
+              >
+                {isCompleted ? <CheckCircle2 className="size-5" /> : step.icon}
+              </div>
+
+              {/* Text */}
+              <div className="flex-1 min-w-0">
+                <p
+                  className={`text-sm font-semibold truncate ${
+                    isCompleted ? "text-[#27AE60]" : isActive ? "" : "text-muted-foreground"
+                  }`}
+                >
+                  {isActive
+                    ? `${step.label}${dots}`
+                    : isCompleted
+                    ? `✓ ${step.label}`
+                    : step.label}
+                </p>
+                {(isActive || isCompleted) && step.subLabel && (
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">
+                    {step.subLabel}
+                  </p>
+                )}
+              </div>
+
+              {/* Status indicator */}
+              <div className="shrink-0">
+                {isCompleted ? (
+                  <Badge className="badge-3d bg-[#6BCB77]/20 text-[#27AE60] border-[#6BCB77]/30 text-xs">
+                    Done
+                  </Badge>
+                ) : isActive ? (
+                  <Loader2
+                    className="size-5 animate-spin"
+                    style={{ color: step.color }}
+                  />
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Progress bar */}
+      <div className="space-y-2">
+        <div className="flex justify-between text-xs text-muted-foreground font-medium">
+          <span>Progress</span>
+          <span>
+            {Math.round(
+              (Math.min(currentStep, allSteps.length) / allSteps.length) * 100
+            )}
+            %
+          </span>
+        </div>
+        <div className="h-3 bg-muted/40 rounded-full overflow-hidden shadow-inner">
+          <div
+            className="h-full rounded-full transition-all duration-1000"
+            style={{
+              width: `${(Math.min(currentStep, allSteps.length) / allSteps.length) * 100}%`,
+              background:
+                "linear-gradient(90deg, #FF6B6B, #FEC163, #6BCB77, #4D96FF, #9B59B6)",
+              backgroundSize: "200% 100%",
+              animation: "rainbowShift 2s linear infinite",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Disclaimer */}
+      <div className="mt-8 p-4 rounded-2xl bg-[#FEC163]/10 border border-[#FEC163]/20 text-center">
+        <p className="text-xs text-muted-foreground font-medium">
+          ⏳ Is prakriya mein 2–4 minute lag sakte hain. Kripaya page band na karein.
+        </p>
+      </div>
+
+      <style>{`
+        @keyframes orbit {
+          0%   { transform: translate(48px, -12px) rotate(0deg) translateX(0); }
+          100% { transform: translate(48px, -12px) rotate(360deg) translateX(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ============================================================
+// Main component
+// ============================================================
 export default function Review() {
   const { currentStudentId, setCurrentView, setIsLoading } = useAppStore();
   const [student, setStudent] = useState<StudentData | null>(null);
@@ -105,6 +347,7 @@ export default function Review() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ studentId: currentStudentId }),
+        signal: AbortSignal.timeout(5 * 60 * 1000), // 5-minute client timeout
       });
 
       if (!res.ok) {
@@ -117,12 +360,12 @@ export default function Review() {
       setError(
         err instanceof Error ? err.message : "Analysis failed. Please try again."
       );
-    } finally {
       setAnalyzing(false);
       setIsLoading(false);
     }
   };
 
+  // ---- Loading state ----
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -134,6 +377,7 @@ export default function Review() {
     );
   }
 
+  // ---- No student ----
   if (!student && !error) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 text-center">
@@ -154,7 +398,17 @@ export default function Review() {
     );
   }
 
-  // Parse questionnaire sections
+  // ---- ANALYZING state — show beautiful animation ----
+  if (analyzing && student) {
+    return (
+      <AnalysisAnimation
+        videos={student.videos}
+        childName={student.childName}
+      />
+    );
+  }
+
+  // ---- Parse questionnaire sections ----
   const sectionA = student?.questionnaire
     ? typeof student.questionnaire.sectionA === "string"
       ? JSON.parse(student.questionnaire.sectionA)
@@ -171,9 +425,16 @@ export default function Review() {
       : student.questionnaire.sectionC
     : {};
 
-  const videoMap: Record<string, { fileName: string; fileSize: number }> = {};
+  const videoMap: Record<
+    string,
+    { fileName: string; fileSize: number; duration: number }
+  > = {};
   for (const v of student?.videos || []) {
-    videoMap[v.taskType] = { fileName: v.fileName, fileSize: v.fileSize };
+    videoMap[v.taskType] = {
+      fileName: v.fileName,
+      fileSize: v.fileSize,
+      duration: v.duration,
+    };
   }
 
   const formatOptionLabel = (opt: string): string => {
@@ -183,12 +444,24 @@ export default function Review() {
       .join(" ");
   };
 
+  const formatSize = (bytes: number) =>
+    bytes >= 1024 * 1024
+      ? `${(bytes / 1024 / 1024).toFixed(1)} MB`
+      : `${(bytes / 1024).toFixed(0)} KB`;
+
+  const formatDuration = (seconds: number) => {
+    if (!seconds || seconds <= 0) return null;
+    const m = Math.floor(seconds / 60);
+    const s = Math.round(seconds % 60);
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  };
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8">
       {/* Header */}
       <div className="mb-6 animate-bounce-in">
         <h1 className="text-2xl sm:text-3xl font-bold rainbow-text">
-          Review & Submit
+          Review &amp; Submit
         </h1>
         <p className="text-muted-foreground mt-1">
           Review all information before submitting for AI analysis
@@ -246,25 +519,19 @@ export default function Review() {
             </h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
-                <span className="text-muted-foreground">
-                  Sit for 5 minutes?
-                </span>
+                <span className="text-muted-foreground">Sit for 5 minutes?</span>
                 <Badge className="badge-3d bg-[#FEC163]/20 text-[#D4A017] border-[#FEC163]/30 text-xs">
                   {formatOptionLabel(sectionA.q1 || "N/A")}
                 </Badge>
               </div>
               <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
-                <span className="text-muted-foreground">
-                  Respond when called?
-                </span>
+                <span className="text-muted-foreground">Respond when called?</span>
                 <Badge className="badge-3d bg-[#FEC163]/20 text-[#D4A017] border-[#FEC163]/30 text-xs">
                   {formatOptionLabel(sectionA.q2 || "N/A")}
                 </Badge>
               </div>
               <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
-                <span className="text-muted-foreground">
-                  Follow instructions?
-                </span>
+                <span className="text-muted-foreground">Follow instructions?</span>
                 <Badge className="badge-3d bg-[#FEC163]/20 text-[#D4A017] border-[#FEC163]/30 text-xs">
                   {formatOptionLabel(sectionA.q3 || "N/A")}
                 </Badge>
@@ -272,7 +539,6 @@ export default function Review() {
             </div>
           </div>
 
-          {/* Rainbow Divider */}
           <div className="divider-rainbow" />
 
           {/* Section B */}
@@ -285,25 +551,19 @@ export default function Review() {
             </h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
-                <span className="text-muted-foreground">
-                  Cry during separation?
-                </span>
+                <span className="text-muted-foreground">Cry during separation?</span>
                 <Badge className="badge-3d bg-[#FF6B9D]/20 text-[#C44569] border-[#FF6B9D]/30 text-xs">
                   {formatOptionLabel(sectionB.q1 || "N/A")}
                 </Badge>
               </div>
               <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
-                <span className="text-muted-foreground">
-                  Comfortable in new places?
-                </span>
+                <span className="text-muted-foreground">Comfortable in new places?</span>
                 <Badge className="badge-3d bg-[#FF6B9D]/20 text-[#C44569] border-[#FF6B9D]/30 text-xs">
                   {formatOptionLabel(sectionB.q2 || "N/A")}
                 </Badge>
               </div>
               <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
-                <span className="text-muted-foreground">
-                  Disturbed by loud sounds?
-                </span>
+                <span className="text-muted-foreground">Disturbed by loud sounds?</span>
                 <Badge className="badge-3d bg-[#FF6B9D]/20 text-[#C44569] border-[#FF6B9D]/30 text-xs">
                   {formatOptionLabel(sectionB.q3 || "N/A")}
                 </Badge>
@@ -311,7 +571,6 @@ export default function Review() {
             </div>
           </div>
 
-          {/* Rainbow Divider */}
           <div className="divider-rainbow" />
 
           {/* Section C */}
@@ -324,25 +583,19 @@ export default function Review() {
             </h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
-                <span className="text-muted-foreground">
-                  Interact with other children?
-                </span>
+                <span className="text-muted-foreground">Interact with other children?</span>
                 <Badge className="badge-3d bg-[#6BCB77]/20 text-[#27AE60] border-[#6BCB77]/30 text-xs">
                   {formatOptionLabel(sectionC.q1 || "N/A")}
                 </Badge>
               </div>
               <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
-                <span className="text-muted-foreground">
-                  Share toys with others?
-                </span>
+                <span className="text-muted-foreground">Share toys with others?</span>
                 <Badge className="badge-3d bg-[#6BCB77]/20 text-[#27AE60] border-[#6BCB77]/30 text-xs">
                   {formatOptionLabel(sectionC.q2 || "N/A")}
                 </Badge>
               </div>
               <div className="flex justify-between items-center bg-white/50 rounded-xl px-3 py-2">
-                <span className="text-muted-foreground">
-                  Introduce themselves?
-                </span>
+                <span className="text-muted-foreground">Introduce themselves?</span>
                 <Badge className="badge-3d bg-[#6BCB77]/20 text-[#27AE60] border-[#6BCB77]/30 text-xs">
                   {formatOptionLabel(sectionC.q3 || "N/A")}
                 </Badge>
@@ -352,7 +605,7 @@ export default function Review() {
         </CardContent>
       </Card>
 
-      {/* Video Upload Status */}
+      {/* Video Upload Status — with duration + size */}
       <Card className="mb-5 card-3d bg-playful-card-blue">
         <CardHeader>
           <CardTitle className="flex items-center gap-2.5 text-base">
@@ -368,40 +621,51 @@ export default function Review() {
               const video = videoMap[taskType];
               const isUploaded = !!video;
               const color = TASK_VIDEO_COLORS[taskType];
+              const dur = video?.duration ? formatDuration(video.duration) : null;
               return (
                 <div
                   key={taskType}
-                  className="flex items-center justify-between text-sm bg-white/50 rounded-xl px-3 py-2.5"
+                  className="flex items-center justify-between text-sm bg-white/50 rounded-xl px-3 py-2.5 gap-2"
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
                     {isUploaded ? (
-                      <span
-                        className="icon-bubble icon-bubble-green size-7 p-1.5"
-                      >
+                      <span className="icon-bubble icon-bubble-green size-7 p-1.5 shrink-0">
                         <CheckCircle2 className="size-3.5" />
                       </span>
                     ) : (
-                      <span
-                        className="icon-bubble icon-bubble-yellow size-7 p-1.5"
-                      >
+                      <span className="icon-bubble icon-bubble-yellow size-7 p-1.5 shrink-0">
                         <AlertCircle className="size-3.5" />
                       </span>
                     )}
-                    <span className="font-medium" style={{ color }}>
-                      {TASK_LABELS[taskType]}
-                    </span>
+                    <div className="min-w-0">
+                      <span className="font-medium block" style={{ color }}>
+                        {TASK_LABELS[taskType]}
+                      </span>
+                      {isUploaded && (
+                        <span className="text-xs text-muted-foreground truncate block">
+                          {video.fileName}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <Badge
-                    className={`badge-3d ${
-                      isUploaded
-                        ? "bg-[#6BCB77]/20 text-[#27AE60] border-[#6BCB77]/30"
-                        : "bg-[#FEC163]/20 text-[#D4A017] border-[#FEC163]/30"
-                    }`}
-                  >
-                    {isUploaded
-                      ? `${(video.fileSize / 1024 / 1024).toFixed(1)} MB`
-                      : "Missing"}
-                  </Badge>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {isUploaded ? (
+                      <>
+                        {dur && (
+                          <Badge className="badge-3d bg-[#4D96FF]/15 text-[#2980B9] border-[#4D96FF]/30 text-xs">
+                            ⏱ {dur}
+                          </Badge>
+                        )}
+                        <Badge className="badge-3d bg-[#6BCB77]/20 text-[#27AE60] border-[#6BCB77]/30 text-xs">
+                          {formatSize(video.fileSize)}
+                        </Badge>
+                      </>
+                    ) : (
+                      <Badge className="badge-3d bg-[#FEC163]/20 text-[#D4A017] border-[#FEC163]/30 text-xs">
+                        Missing
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -415,25 +679,6 @@ export default function Review() {
           <AlertCircle className="size-4 shrink-0" />
           {error}
         </div>
-      )}
-
-      {/* Analyzing State - Animated sparkle */}
-      {analyzing && (
-        <Card className="mb-5 card-3d bg-playful-card-coral border-2 border-[#FF6B6B]/30">
-          <CardContent className="p-8 text-center">
-            <div className="animate-sparkle inline-block mb-4">
-              <Sparkles className="size-12 text-[#FF6B6B]" />
-            </div>
-            <h3 className="font-bold text-lg mb-2 rainbow-text">
-              AI Analysis in Progress
-            </h3>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              Our AI is analyzing the questionnaire responses and video
-              recordings. This may take a moment...
-            </p>
-            <div className="divider-rainbow mt-4 mx-auto w-32" />
-          </CardContent>
-        </Card>
       )}
 
       {/* Navigation Buttons */}
