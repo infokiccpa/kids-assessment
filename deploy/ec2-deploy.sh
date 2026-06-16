@@ -21,7 +21,10 @@ else
 fi
 
 echo "==> Installing dependencies..."
-npm ci
+if ! npm ci; then
+  echo "npm ci failed — falling back to npm install..."
+  npm install
+fi
 
 echo "==> Building production bundle..."
 npm run build:docker
