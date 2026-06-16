@@ -21,9 +21,15 @@ export async function connectDB(): Promise<typeof mongoose> {
   }
 
   if (!globalWithMongoose.mongoose.promise) {
-    globalWithMongoose.mongoose.promise = mongoose.connect(MONGODB_URI, {
-      bufferCommands: false,
-    });
+    globalWithMongoose.mongoose.promise = mongoose
+      .connect(MONGODB_URI, {
+        bufferCommands: false,
+        serverSelectionTimeoutMS: 10000,
+      })
+      .catch((err) => {
+        globalWithMongoose.mongoose.promise = null;
+        throw err;
+      });
   }
 
   globalWithMongoose.mongoose.conn = await globalWithMongoose.mongoose.promise;

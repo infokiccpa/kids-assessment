@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: false,
   allowedDevOrigins: [
+    "localhost",
+    "127.0.0.1",
+    "192.168.29.185",
     ".space-z.ai",
   ],
   serverExternalPackages: ["mongoose"],

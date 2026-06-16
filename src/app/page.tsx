@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useAppStore } from "@/store/app-store";
+import { sessionToAppUser } from "@/lib/session-user";
+import { fetchSessionWithRetry } from "@/lib/fetch-session";
 import LandingPage from "@/components/shared/landing";
 import LoginForm from "@/components/auth/login-form";
 import RegisterForm from "@/components/auth/register-form";
@@ -52,37 +54,61 @@ export default function Home() {
 
   // Restore session on mount
   useEffect(() => {
+    let cancelled = false;
+
     const restoreSession = async () => {
       try {
-        const sessionRes = await fetch("/api/auth/session");
-        const session = await sessionRes.json();
-        if (session?.user) {
-          setUser({
-            id: session.user.id as string,
-            email: session.user.email as string,
-            name: session.user.name as string,
-            role: (session.user.role as string) || "PARENT",
-          });
-          
-          // Restore exact last view or fallback to dashboard based on role
+        const session = await fetchSessionWithRetry();
+        if (cancelled) return;
+
+        const appUser = sessionToAppUser(session);
+        if (appUser) {
+          setUser(appUser);
+
           const lastView = localStorage.getItem("kinder_assess_last_view");
-          const allowedViews = session.user.role === "ADMIN"
-            ? ["admin-dashboard", "admin-students", "admin-student-detail", "admin-settings", "admin-platforms"]
-            : ["parent-dashboard", "parent-registration", "parent-questionnaire", "parent-videos", "parent-review", "parent-results", "parent-platforms"];
-            
+          const allowedViews =
+            appUser.role === "ADMIN"
+              ? [
+                  "admin-dashboard",
+                  "admin-students",
+                  "admin-student-detail",
+                  "admin-settings",
+                  "admin-platforms",
+                ]
+              : [
+                  "parent-dashboard",
+                  "parent-registration",
+                  "parent-questionnaire",
+                  "parent-videos",
+                  "parent-review",
+                  "parent-results",
+                  "parent-platforms",
+                ];
+
           if (lastView && allowedViews.includes(lastView)) {
             setCurrentView(lastView as any);
           } else {
-            setCurrentView(session.user.role === "ADMIN" ? "admin-dashboard" : "parent-dashboard");
+            setCurrentView(
+              appUser.role === "ADMIN" ? "admin-dashboard" : "parent-dashboard"
+            );
           }
         }
       } catch (err) {
-        console.error("Failed to restore session", err);
+        if (!cancelled) {
+          console.error("Failed to restore session", err);
+        }
       } finally {
-        setCheckingSession(false);
+        if (!cancelled) {
+          setCheckingSession(false);
+        }
       }
     };
+
     restoreSession();
+
+    return () => {
+      cancelled = true;
+    };
   }, [setUser, setCurrentView]);
 
   // Persist currentView to localStorage whenever it changes

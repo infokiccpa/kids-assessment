@@ -16,6 +16,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import Image from "next/image";
 import { Loader2, LogIn, AlertCircle, Shield } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { sessionToAppUser } from "@/lib/session-user";
+import { fetchSessionWithRetry } from "@/lib/fetch-session";
 
 export default function LoginForm() {
   const { setCurrentView, setUser } = useAppStore();
@@ -40,22 +42,23 @@ export default function LoginForm() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password. Please try again.");
+        if (result.error === "DatabaseConnection") {
+          setError(
+            "Cannot reach the database. Check MONGODB_URI in .env and restart the dev server."
+          );
+        } else {
+          setError("Invalid email or password. Please try again.");
+        }
         return;
       }
 
-      const sessionRes = await fetch("/api/auth/session");
-      const session = await sessionRes.json();
+      const session = await fetchSessionWithRetry();
+      const appUser = sessionToAppUser(session);
 
-      if (session?.user) {
-        setUser({
-          id: session.user.id as string,
-          email: session.user.email as string,
-          name: session.user.name as string,
-          role: (session.user.role as string) || "PARENT",
-        });
+      if (appUser) {
+        setUser(appUser);
 
-        if (session.user.role === "ADMIN") {
+        if (appUser.role === "ADMIN") {
           setCurrentView("admin-dashboard");
         } else {
           setCurrentView("parent-dashboard");
