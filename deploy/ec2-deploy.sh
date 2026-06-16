@@ -14,7 +14,11 @@ if [[ ! -f .env ]]; then
 fi
 
 echo "==> Pulling latest code..."
-git pull origin main
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git pull origin main
+else
+  echo "Not a git repo yet — skipping pull."
+fi
 
 echo "==> Installing dependencies..."
 npm ci
@@ -31,7 +35,8 @@ if pm2 describe kids-assessment >/dev/null 2>&1; then
 else
   pm2 start ecosystem.config.cjs
   pm2 save
-  pm2 startup | tail -1 | bash || true
+  PM2_USER="${USER:-ec2-user}"
+  pm2 startup systemd -u "$PM2_USER" --hp "$HOME" | tail -1 | sudo bash || true
 fi
 
 echo "==> Health check..."
