@@ -8,11 +8,15 @@ build:
       - npm run build:docker
 run:
   runtime-version: 22
-  command: node .next/standalone/server.js
+  command: node scripts/start-production.mjs
   network:
     port: 3000
   env:
     - name: HOSTNAME
       value: "0.0.0.0"
+    - name: PORT
+      value: "3000"
     - name: NODE_ENV
       value: "production"
+    - name: NEXTAUTH_TRUST_HOST
+      value: "true"

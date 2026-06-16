@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
-    "build:docker": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
-    "start": "NODE_ENV=production node .next/standalone/server.js",
+    "build:docker": "next build && node scripts/prepare-standalone.mjs",
+    "start": "node scripts/start-production.mjs",
     "lint": "eslint .",
     "seed:admin": "node scripts/seed-demo-admin.mjs"
   },

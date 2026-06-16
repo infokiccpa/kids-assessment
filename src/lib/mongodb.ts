@@ -1,9 +1,11 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI || '';
-
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable');
+function getMongoUri(): string {
+  const uri = process.env.MONGODB_URI || '';
+  if (!uri) {
+    throw new Error('Please define the MONGODB_URI environment variable');
+  }
+  return uri;
 }
 
 // Cached connection for Next.js hot-reload
@@ -22,7 +24,7 @@ export async function connectDB(): Promise<typeof mongoose> {
 
   if (!globalWithMongoose.mongoose.promise) {
     globalWithMongoose.mongoose.promise = mongoose
-      .connect(MONGODB_URI, {
+      .connect(getMongoUri(), {
         bufferCommands: false,
         serverSelectionTimeoutMS: 10000,
       })
